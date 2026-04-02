@@ -9,7 +9,7 @@ export default {
       browser: "Google Chrome"
     },
     {
-      match: /youtube\.com/,
+      match: /youtube\.com|youtu\.be/,
       browser: "Brave"
     }
   ]
