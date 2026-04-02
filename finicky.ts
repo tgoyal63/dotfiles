@@ -10,7 +10,7 @@ export default {
     },
     {
       match: /youtube\.com|youtu\.be/,
-      browser: "Brave"
+      browser: "Brave Browser"
     }
   ]
 };
