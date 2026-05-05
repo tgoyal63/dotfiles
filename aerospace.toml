@@ -47,7 +47,7 @@ o = "^built-in retina display$"
 
 [mode.main.binding]
 
-#spotif
+#spotify
 f7 = "exec-and-forget ~/.config/aerospace/scripts/spotify/prev.sh"
 f8 = "exec-and-forget ~/.config/aerospace/scripts/spotify/playpause.sh"
 f9 = "exec-and-forget ~/.config/aerospace/scripts/spotify/next.sh"

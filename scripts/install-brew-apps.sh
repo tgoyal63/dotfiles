@@ -1,9 +1,21 @@
 #!/bin/bash
-if ! command -v bun &> /dev/null; then
+set -euo pipefail
+
+if ! command -v bun &> /dev/null && [ ! -x "$HOME/.bun/bin/bun" ]; then
   curl -fsSL https://bun.sh/install | bash
 fi
 
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
+brew tap nikitabobko/tap
+
+brew install --quiet \
+  starship
+
 brew install --cask --quiet \
+  aerospace \
   audacity \
   brave-browser \
   chatgpt \
@@ -15,5 +27,8 @@ brew install --cask --quiet \
   google-chrome \
   obs \
   spotify \
-  whatsapp \
-  zen-browser
+  whatsapp
+
+if [ ! -d "/Applications/Zen.app" ] && [ ! -d "/Applications/Zen Browser.app" ]; then
+  brew install --cask --quiet zen-browser
+fi
