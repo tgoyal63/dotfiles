@@ -3,18 +3,8 @@ set -eu
 
 # Move sensitive apps away from the focused monitor before/during screen share.
 # Focus the shared monitor, then run this script.
-is_sensitive_app() {
-  app_id="$1"
-
-  case "$app_id" in
-    com.hnc.Discord|net.whatsapp.WhatsApp|com.spotify.client|com.obsproject.obs-studio)
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+. "$script_dir/workspace-settings.sh"
 
 moved=0
 windows_file="${TMPDIR:-/tmp}/aerospace-privacy-windows.$$"
@@ -29,7 +19,7 @@ while IFS='|' read -r window_id app_id app_name; do
 
   [ -n "$window_id" ] && [ -n "$app_id" ] || continue
 
-  if is_sensitive_app "$app_id"; then
+  if is_screen_share_private_app "$app_id"; then
     aerospace move-node-to-monitor --window-id "$window_id" --wrap-around next
     printf 'Moved %s away from the focused monitor\n' "$app_name"
     moved=$((moved + 1))

@@ -32,6 +32,8 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `finicky.ts` | `~/.finicky.ts` | Browser routing |
 | `scripts/install-brew-apps.sh` | run manually | Grouped Homebrew installer |
 | `scripts/macos/fix-mission-control.sh` | run manually | Mission Control/AeroSpace defaults |
+| `scripts/aerospace/workspace-settings.sh` | sourced by helper scripts | Global workspace, monitor, app routing, and privacy settings |
+| `shortcuts.html` | opened by `alt+shift+s` | Quick shortcut overview page |
 | `scripts/aerospace/spotify/` | `~/.config/aerospace/scripts/spotify/` | Spotify media key scripts |
 
 ## Install Apps
@@ -103,12 +105,15 @@ Log out and back in after running the script so `Displays have separate Spaces` 
 | `alt+shift+m` | Move focused window to next monitor |
 | `alt+shift+p` | Move sensitive apps off the focused monitor for screen share |
 | `alt+shift+a` | Restore app workspace routing and monitor arrangement |
+| `alt+shift+s` | Open the shortcuts overview page |
 | `alt+enter` | New Ghostty window |
 | `alt+shift+;` | Service mode |
 
 ## Workspace Arrangement
 
 Press `alt+shift+a` to manually restore open apps to their role workspaces, then restore the default workspace monitor layout.
+
+Edit `scripts/aerospace/workspace-settings.sh` to change the global workspace layout, app routing, monitor targets, or screen-share private apps used by the helper scripts.
 
 Work display `AORUS FI27Q`: `1`, `2`, `3`, `7`, `8`, `9`.
 
