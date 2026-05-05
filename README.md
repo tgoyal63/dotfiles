@@ -33,7 +33,7 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `scripts/install-brew-apps.sh` | run manually | Grouped Homebrew installer |
 | `scripts/macos/fix-mission-control.sh` | run manually | Mission Control/AeroSpace defaults |
 | `scripts/aerospace/workspace-settings.sh` | sourced by helper scripts | Global workspace, monitor, app routing, and privacy settings |
-| `shortcuts.html` | opened by `alt+shift+s` | Quick shortcut overview page |
+| `SHORTCUTS.md` | opened by `alt+shift+s` | Quick shortcut overview document |
 | `scripts/aerospace/spotify/` | `~/.config/aerospace/scripts/spotify/` | Spotify media key scripts |
 
 ## Install Apps
