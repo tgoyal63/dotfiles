@@ -1,30 +1,29 @@
 config-version = 2
+
+# Lean login stack. Everything else is routed when opened manually.
 after-startup-command = [
+  "exec-and-forget open -a Ghostty",
   "exec-and-forget open -a 'Zen Browser'",
   "exec-and-forget open -a Discord",
+  "exec-and-forget open -a 'Visual Studio Code'",
   "exec-and-forget open -a ChatGPT",
   "exec-and-forget open -a Spotify",
   "exec-and-forget open -a WhatsApp",
-  "exec-and-forget open -a Ghostty",
   "exec-and-forget open -a 'OBS'",
-  "exec-and-forget open -a 'Brave Browser'",
-  "exec-and-forget open -a 'Google Chrome'",
   "workspace 1"
 ]
+
 start-at-login = true
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 accordion-padding = 30
 default-root-container-layout = "tiles"
 default-root-container-orientation = "auto"
+
 on-focus-changed = ["exec-and-forget aerospace move-mouse window-lazy-center || aerospace move-mouse monitor-lazy-center"]
-
-
-#on-focused-monitor-changed = [ "move-mouse monitor-lazy-center" ]
-
 automatically-unhide-macos-hidden-apps = false
-persistent-workspaces = [ "1", "2", "3", "4", "5", "6", "7", "8", "9", "o" ]
-on-mode-changed = [ ]
+persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "o"]
+on-mode-changed = []
 
 [key-mapping]
 preset = "qwerty"
@@ -39,47 +38,42 @@ bottom = 0
 top = 0
 right = 0
 
-[workspace-to-monitor-force-assignment]
-
-5 = "^built-in retina display$"
-9 = "^built-in retina display$"
-o = "^built-in retina display$"
+# Role map:
+# 1 Dev, 2 Web, 3 AI, 4 Comms, 5 Media, 6 Creation, 7 Notes/Tasks,
+# 8 Work Browser, 9 Dev Utilities, 0 Misc.
+# Workspaces are intentionally not force-pinned to monitors so they can be moved.
 
 [mode.main.binding]
 
-#spotify
+# Media keys are handled through the repo scripts symlinked into Aerospace config.
 f7 = "exec-and-forget ~/.config/aerospace/scripts/spotify/prev.sh"
 f8 = "exec-and-forget ~/.config/aerospace/scripts/spotify/playpause.sh"
 f9 = "exec-and-forget ~/.config/aerospace/scripts/spotify/next.sh"
 f10 = "exec-and-forget ~/.config/aerospace/scripts/spotify/mute.sh"
 f11 = "exec-and-forget ~/.config/aerospace/scripts/spotify/volumedown.sh"
 f12 = "exec-and-forget ~/.config/aerospace/scripts/spotify/volumeup.sh"
- 
 
+# Strict tiling controls.
 alt-slash = "layout tiles horizontal vertical"
 alt-comma = "layout accordion horizontal vertical"
-alt-left = "focus left --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
-alt-down = "focus down --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
-alt-up = "focus up --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
-alt-right = "focus right --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
 alt-shift-left = "move left"
 alt-shift-down = "move down"
 alt-shift-up = "move up"
 alt-shift-right = "move right"
-
-
 alt-h = "focus left --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
 alt-j = "focus down --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
 alt-k = "focus up --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
 alt-l = "focus right --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors"
+
 alt-shift-h = "move left --boundaries all-monitors-outer-frame"
 alt-shift-j = "move down --boundaries all-monitors-outer-frame"
 alt-shift-k = "move up --boundaries all-monitors-outer-frame"
 alt-shift-l = "move right --boundaries all-monitors-outer-frame"
+
 alt-minus = "resize smart -15"
 alt-equal = "resize smart +15"
 
-
+# Workspaces.
 alt-1 = "workspace 1"
 alt-2 = "workspace 2"
 alt-3 = "workspace 3"
@@ -105,61 +99,102 @@ alt-shift-9 = "move-node-to-workspace 9"
 alt-shift-0 = "move-node-to-workspace 0"
 alt-shift-o = "move-node-to-workspace o"
 
-
 alt-f = "fullscreen"
 alt-shift-f = "layout floating tiling"
-
 alt-tab = "exec-and-forget bash -c 'aerospace focus dfs-next --boundaries-action fail || { aerospace focus-monitor --wrap-around next; aerospace focus --dfs-index 0; }'"
-
-alt-shift-tab = "move-workspace-to-monitor --wrap-around next "
-
+alt-shift-tab = "move-workspace-to-monitor --wrap-around next"
+alt-shift-m = "move-node-to-monitor --focus-follows-window --wrap-around next"
+alt-shift-p = "exec-and-forget ~/.config/aerospace/scripts/privacy-screen-share.sh"
+alt-shift-a = "exec-and-forget ~/.config/aerospace/scripts/arrange-workspaces.sh"
 alt-enter = "exec-and-forget osascript -e 'tell application \"Ghostty\" to new window'"
-
 alt-shift-semicolon = "mode service"
 
 [mode.service.binding]
-esc = [ "reload-config", "mode main" ]
-r = [ "flatten-workspace-tree", "mode main" ]
-f = [ "layout floating tiling", "mode main" ]
-backspace = [ "close-all-windows-but-current", "mode main" ]
-alt-shift-h = [ "join-with left", "mode main" ]
-alt-shift-j = [ "join-with down", "mode main" ]
-alt-shift-k = [ "join-with up", "mode main" ]
-alt-shift-l = [ "join-with right", "mode main" ]
+esc = ["reload-config", "mode main"]
+r = ["flatten-workspace-tree", "mode main"]
+f = ["layout floating tiling", "mode main"]
+backspace = ["close-all-windows-but-current", "mode main"]
+alt-shift-h = ["join-with left", "mode main"]
+alt-shift-j = ["join-with down", "mode main"]
+alt-shift-k = ["join-with up", "mode main"]
+alt-shift-l = ["join-with right", "mode main"]
 
-
-[[on-window-detected]]
-if.app-id = "app.zen-browser.zen"
-run = "move-node-to-workspace 2"
-
-[[on-window-detected]]
-if.app-id = "com.hnc.Discord"
-run = "move-node-to-workspace 3"
-
-[[on-window-detected]]
-if.app-id = "com.openai.chat"
-run = "move-node-to-workspace 4"
-
-[[on-window-detected]]
-if.app-id = "com.spotify.client"
-run = "move-node-to-workspace 5"
-
-[[on-window-detected]]
-if.app-id = "net.whatsapp.WhatsApp"
-run = "move-node-to-workspace 9"
-
-[[on-window-detected]]
-if.app-id = "ru.keepcoder.Telegram"
-run = "move-node-to-workspace 9"
-
+# 1: Dev / terminal
 [[on-window-detected]]
 if.app-id = "com.mitchellh.ghostty"
 run = "move-node-to-workspace 1"
 
 [[on-window-detected]]
+if.app-id = "com.microsoft.VSCode"
+run = "move-node-to-workspace 1"
+
+# 2: Primary web
+[[on-window-detected]]
+if.app-id = "app.zen-browser.zen"
+run = "move-node-to-workspace 2"
+
+# 3: AI
+[[on-window-detected]]
+if.app-id = "com.openai.chat"
+run = "move-node-to-workspace 3"
+
+# 4: Comms
+[[on-window-detected]]
+if.app-id = "com.hnc.Discord"
+run = "move-node-to-workspace 4"
+
+[[on-window-detected]]
+if.app-id = "net.whatsapp.WhatsApp"
+run = "move-node-to-workspace 4"
+
+[[on-window-detected]]
+if.app-id = "ru.keepcoder.Telegram"
+run = "move-node-to-workspace 4"
+
+[[on-window-detected]]
+if.app-id = "com.apple.mail"
+run = "move-node-to-workspace 4"
+
+# 5: Media
+[[on-window-detected]]
+if.app-id = "com.spotify.client"
+run = "move-node-to-workspace 5"
+
+# 6: Creation
+[[on-window-detected]]
 if.app-id = "com.obsproject.obs-studio"
 run = "move-node-to-workspace o"
 
+[[on-window-detected]]
+if.app-name-regex-substring = "audacity"
+run = "move-node-to-workspace 6"
+
+# 7: Notes / tasks / planning
+[[on-window-detected]]
+if.app-id = "com.apple.Notes"
+run = "move-node-to-workspace 7"
+
+[[on-window-detected]]
+if.app-id = "com.apple.iCal"
+run = "move-node-to-workspace 7"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "obsidian"
+run = "move-node-to-workspace 7"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "notion"
+run = "move-node-to-workspace 7"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "todoist"
+run = "move-node-to-workspace 7"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "things"
+run = "move-node-to-workspace 7"
+
+# 8: Work browser / browser exceptions
 [[on-window-detected]]
 if.app-id = "com.google.Chrome"
 run = "move-node-to-workspace 8"
@@ -168,6 +203,23 @@ run = "move-node-to-workspace 8"
 if.app-id = "com.brave.Browser"
 run = "move-node-to-workspace 8"
 
-# Random / everything else
+# 9: Dev utilities
+[[on-window-detected]]
+if.app-name-regex-substring = "docker"
+run = "move-node-to-workspace 9"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "orbstack"
+run = "move-node-to-workspace 9"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "postman"
+run = "move-node-to-workspace 9"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "insomnia"
+run = "move-node-to-workspace 9"
+
+# 0: Everything else
 [[on-window-detected]]
 run = "move-node-to-workspace 0"

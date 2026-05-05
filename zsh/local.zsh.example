@@ -1,0 +1,5 @@
+# Copy to zsh/local.zsh for machine-specific settings.
+# This file is intentionally not sourced unless copied without the .example suffix.
+
+# export EDITOR="code --wait"
+# export WORKSPACE="$HOME/projects"
