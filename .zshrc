@@ -106,10 +106,10 @@ source $ZSH/oh-my-zsh.sh
 eval "$(starship init zsh)"
 
 # opencode
-export PATH=/Users/sid/.opencode/bin:$PATH
+export PATH=$HOME/.opencode/bin:$PATH
 
 # bun completions
-[ -s "/Users/sid/.bun/_bun" ] && source "/Users/sid/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"

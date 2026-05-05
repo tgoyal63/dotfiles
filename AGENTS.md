@@ -20,5 +20,4 @@ macOS-only personal dotfiles. No build, test, lint, or CI. Config files are mean
 
 - **Script path mismatch**: `aerospace.toml` binds media keys to `~/.config/aerospace/scripts/spotify/*.sh`, but scripts live here in `scripts/aerospace/spotify/`. Symlink the directory or update the paths if keys stop working.
 - **Duplicate Bun config**: `.zshrc` has two identical `BUN_INSTALL` blocks (lines 114–116 and 118–120). Safe to remove one.
-- **Hardcoded user path**: `.zshrc` line 109 hardcodes `/Users/sid/.opencode/bin`. Generalize if this repo is used on another machine.
 - **Aerospace config path**: Aerospace expects its config at `~/.config/aerospace/aerospace.toml`, not in the dotfiles dir. Symlink or copy after changes.
