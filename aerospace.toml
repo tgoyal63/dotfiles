@@ -3,7 +3,7 @@ config-version = 2
 # Lean login stack. Everything else is routed when opened manually.
 after-startup-command = [
   "exec-and-forget open -a Ghostty",
-  "exec-and-forget open -a 'Zen Browser'",
+  "exec-and-forget open -a 'Zen'",
   "exec-and-forget open -a Discord",
   "exec-and-forget open -a 'Visual Studio Code'",
   "exec-and-forget open -a ChatGPT",

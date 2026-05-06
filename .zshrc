@@ -14,3 +14,6 @@ for _zsh_module in path tools prompt aliases local; do
 done
 
 unset _zsh_module _zshrc_source
+
+# OpenClaw Completion
+source "/Users/tushar/.openclaw/completions/openclaw.zsh"
