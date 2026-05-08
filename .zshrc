@@ -15,5 +15,4 @@ done
 
 unset _zsh_module _zshrc_source
 
-# OpenClaw Completion
-source "/Users/tushar/.openclaw/completions/openclaw.zsh"
+eval "$(fnm env --use-on-cd)"
