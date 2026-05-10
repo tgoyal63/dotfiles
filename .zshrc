@@ -16,3 +16,4 @@ done
 unset _zsh_module _zshrc_source
 
 eval "$(fnm env --use-on-cd)"
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"

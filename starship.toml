@@ -1,4 +1,9 @@
-format = "$directory$git_branch$git_status$python$time$character"
+add_newline = true
+
+# Two-line format: Info on top, typing on bottom
+format = "$directory$git_branch$python$character"
+
+right_format = "$cmd_duration$time"
 
 [character]
 success_symbol = "[❯](bold green)"
@@ -6,41 +11,29 @@ error_symbol = "[❯](bold red)"
 
 [directory]
 style = "bold blue"
-truncation_length = 3
+truncation_length = 1 # Shows only the current folder name if path is long
 truncate_to_repo = true
+# Removed truncation_symbol to keep it clean
 
 [git_branch]
-format = "[$symbol$branch]($style) "
-symbol = " "
+format = "[$branch]($style) "
 style = "bold purple"
 
 [git_status]
-format = "[$all_status$ahead_behind]($style) "
+format = "([$all_status$ahead_behind]($style) )"
 style = "bold green"
-conflicted = "⚔️"
-ahead = "⇡${count}"
-behind = "⇣${count}"
-diverged = "⇕⇡${ahead_count}⇣${behind_count}"
-untracked = "?${count}"
-stashed = "📦"
-modified = "~${count}"
-staged = "+${count}"
-renamed = "»${count}"
-deleted = "✘${count}"
 
 [python]
-format = "[$symbol($environment)]($style) "
+symbol = "🐍 "
+format = '[(\($virtualenv\))]($style) ' # Removed version to save space
 style = "bold yellow"
-symbol = ""
 
 [time]
-format = "[$time]($style) "
+disabled = false
+format = "[$time]($style)"
 style = "dim bold white"
 time_format = "%H:%M"
-disabled = false
 
 [cmd_duration]
-format = "[$duration]($style) "
-style = "bold yellow"
-min_time = 5000
-show_milliseconds = false
+min_time = 500
+format = "took [$duration]($style) "
