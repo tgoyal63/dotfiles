@@ -223,4 +223,5 @@ run = "move-node-to-workspace 9"
 
 # 0: Everything else
 [[on-window-detected]]
+if = "true"
 run = "move-node-to-workspace 0"
