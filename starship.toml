@@ -1,7 +1,7 @@
 add_newline = true
 
-# Two-line format: Info on top, typing on bottom
-format = "$directory$git_branch$python$character"
+# Context on top, input on the next line.
+format = "$directory$git_branch$git_status$python$line_break$character"
 
 right_format = "$cmd_duration$time"
 
@@ -13,7 +13,6 @@ error_symbol = "[❯](bold red)"
 style = "bold blue"
 truncation_length = 1 # Shows only the current folder name if path is long
 truncate_to_repo = true
-# Removed truncation_symbol to keep it clean
 
 [git_branch]
 format = "[$branch]($style) "
@@ -25,7 +24,7 @@ style = "bold green"
 
 [python]
 symbol = "🐍 "
-format = '[(\($virtualenv\))]($style) ' # Removed version to save space
+format = '[(\($virtualenv\))]($style) '
 style = "bold yellow"
 
 [time]

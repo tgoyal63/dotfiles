@@ -139,6 +139,10 @@ run = "move-node-to-workspace 2"
 if.app-id = "com.openai.chat"
 run = "move-node-to-workspace 3"
 
+[[on-window-detected]]
+if.app-id = "com.openai.codex"
+run = "move-node-to-workspace 3"
+
 # 4: Comms
 [[on-window-detected]]
 if.app-id = "com.hnc.Discord"
@@ -161,11 +165,12 @@ run = "move-node-to-workspace 4"
 if.app-id = "com.spotify.client"
 run = "move-node-to-workspace 5"
 
-# 6: Creation
+# o: OBS
 [[on-window-detected]]
 if.app-id = "com.obsproject.obs-studio"
 run = "move-node-to-workspace o"
 
+# 6: Creation
 [[on-window-detected]]
 if.app-name-regex-substring = "audacity"
 run = "move-node-to-workspace 6"

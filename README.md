@@ -8,7 +8,7 @@ macOS dotfiles tuned for a fast, strict-tiling, dev-first workflow.
 |---|---|---|
 | `1` | Dev / terminal | Ghostty, VS Code |
 | `2` | Web | Zen Browser |
-| `3` | AI | ChatGPT |
+| `3` | AI | ChatGPT, Codex |
 | `4` | Comms | Discord, WhatsApp, Telegram, Mail |
 | `5` | Media | Spotify |
 | `6` | Creation | Audacity |
@@ -31,6 +31,8 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `starship.toml` | `~/.config/starship.toml` | Prompt layout |
 | `finicky.ts` | `~/.finicky.ts` | Browser routing |
 | `scripts/install-brew-apps.sh` | run manually | Grouped Homebrew installer |
+| `scripts/link-configs.sh` | run manually | Safely create or refresh config symlinks |
+| `scripts/check-config.sh` | run manually | Validate shell and application configs |
 | `scripts/macos/fix-mission-control.sh` | run manually | Mission Control/AeroSpace defaults |
 | `scripts/aerospace/workspace-settings.sh` | sourced by helper scripts | Global workspace, monitor, app routing, and privacy settings |
 | `SHORTCUTS.md` | opened by `alt+shift+s` | Quick shortcut overview document |
@@ -57,19 +59,24 @@ The installer is idempotent for casks: Homebrew-managed apps are skipped, unavai
 
 ## Link Configs
 
-From the repo root:
+From the repo root, preview the links and then apply them:
 
 ```bash
-mkdir -p "$HOME/.config/aerospace" "$HOME/.config/ghostty"
-ln -sfn "$PWD/.zshrc" "$HOME/.zshrc"
-ln -sfn "$PWD/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
-ln -sfn "$PWD/scripts/aerospace" "$HOME/.config/aerospace/scripts"
-ln -sfn "$PWD/ghostty.toml" "$HOME/.config/ghostty/config"
-ln -sfn "$PWD/starship.toml" "$HOME/.config/starship.toml"
-ln -sfn "$PWD/finicky.ts" "$HOME/.finicky.ts"
+scripts/link-configs.sh --dry-run
+scripts/link-configs.sh
 ```
 
-The `.zshrc` resolves the repo path automatically when symlinked. Put machine-specific shell settings in `zsh/local.zsh`; start from `zsh/local.zsh.example`.
+The linker refreshes symlinks but refuses to overwrite regular files or directories. The `.zshrc` resolves the repo path automatically when symlinked. Put machine-specific shell settings in `zsh/local.zsh`; start from `zsh/local.zsh.example`.
+
+## Validate Configs
+
+Run the dependency-free repository checks after making changes:
+
+```bash
+scripts/check-config.sh
+```
+
+The checker validates shell syntax, executable permissions, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
 
 ## Mission Control Fix
 
@@ -94,8 +101,9 @@ Log out and back in after running the script so `Displays have separate Spaces` 
 |---|---|
 | `alt+h/j/k/l` | Focus left/down/up/right |
 | `alt+shift+h/j/k/l` | Move window left/down/up/right |
-| `alt+1..0` | Switch workspace |
-| `alt+shift+1..0` | Move window to workspace |
+| `alt+1..0` / `alt+o` | Switch workspace |
+| `alt+shift+1..0` / `alt+shift+o` | Move window to workspace |
+| `alt+tab` | Focus next window, wrapping across monitors |
 | `alt+/` | Toggle tile orientation |
 | `alt+,` | Toggle accordion orientation |
 | `alt+-` / `alt+=` | Resize |

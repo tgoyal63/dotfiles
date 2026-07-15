@@ -2,22 +2,24 @@
 
 ## Repo overview
 
-macOS-only personal dotfiles. No build, test, lint, or CI. Config files are meant to be symlinked to their target locations (e.g. `~/.zshrc`, `~/.config/aerospace/aerospace.toml`).
+macOS-only personal dotfiles. No build or CI; `scripts/check-config.sh` provides local validation. Config files are symlinked to their target locations (e.g. `~/.zshrc`, `~/.config/aerospace/aerospace.toml`).
 
 ## Structure
 
 | File | Target / Purpose |
 |---|---|
-| `.zshrc` | Shell: Oh My Zsh + Starship + NVM + Bun |
-| `aerospace.toml` | Aerospace tiling WM (10 workspaces, `alt`-based bindings) |
+| `.zshrc` | Modular shell entrypoint: Oh My Zsh + Starship + fnm + Bun |
+| `aerospace.toml` | Aerospace tiling WM (11 workspaces, `alt`-based bindings) |
 | `ghostty.toml` | Ghostty terminal (Dracula theme, 0.88 opacity) |
 | `starship.toml` | Starship prompt config |
 | `finicky.ts` | URL-to-browser router (Zen default, Chrome for Meet, Brave for YouTube) |
 | `scripts/install-brew-apps.sh` | One-shot cask installer |
+| `scripts/link-configs.sh` | Safe, repeatable config linker |
+| `scripts/check-config.sh` | Repository config validation |
 | `scripts/aerospace/spotify/` | AppleScript wrappers for media keys in Aerospace |
 
 ## Gotchas
 
-- **Script path mismatch**: `aerospace.toml` binds media keys to `~/.config/aerospace/scripts/spotify/*.sh`, but scripts live here in `scripts/aerospace/spotify/`. Symlink the directory or update the paths if keys stop working.
-- **Duplicate Bun config**: `.zshrc` has two identical `BUN_INSTALL` blocks (lines 114–116 and 118–120). Safe to remove one.
-- **Aerospace config path**: Aerospace expects its config at `~/.config/aerospace/aerospace.toml`, not in the dotfiles dir. Symlink or copy after changes.
+- **Link layout**: Run `scripts/link-configs.sh`; it supports both a linked Aerospace scripts directory and the existing directory of individual links.
+- **Mirrored routes**: App routing is represented in both `aerospace.toml` and `scripts/aerospace/workspace-settings.sh`; `scripts/check-config.sh` fails if they drift.
+- **Aerospace config path**: Aerospace expects `~/.config/aerospace/aerospace.toml`; the linker points that path at this repo.

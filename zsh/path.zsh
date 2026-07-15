@@ -9,6 +9,7 @@ _path_prepend() {
 
 _path_prepend "/opt/homebrew/bin"
 _path_prepend "/opt/homebrew/sbin"
+_path_prepend "/opt/homebrew/opt/libpq/bin"
 _path_prepend "$HOME/bin"
 _path_prepend "$HOME/.local/bin"
 _path_prepend "$HOME/.opencode/bin"
