@@ -144,8 +144,99 @@ validate_documentation() {
 
   grep -Fqx "$expected_row" "$repo_dir/README.md" &&
     grep -Fqx "$expected_row" "$repo_dir/SHORTCUTS.md" &&
+    grep -Fq '| `alt+b` | Open or focus Zen on workspace `2` |' "$repo_dir/SHORTCUTS.md" &&
+    grep -Fq '| `alt+r` | Enter resize mode |' "$repo_dir/SHORTCUTS.md" &&
+    grep -Fq '| Hold `Option` while opening any link | Force Chrome |' "$repo_dir/SHORTCUTS.md" &&
+    grep -Fq '`alt+b` / `alt+shift+b` / `ctrl+alt+b`' "$repo_dir/README.md" &&
     grep -Fq 'scripts/link-configs.sh' "$repo_dir/README.md" &&
     grep -Fq 'scripts/check-config.sh' "$repo_dir/README.md"
+}
+
+validate_finicky_config() {
+  node --experimental-strip-types --input-type=module -e '
+    import { pathToFileURL } from "node:url";
+
+    const modifierState = {
+      shift: false,
+      option: false,
+      command: false,
+      control: false,
+      capsLock: false,
+      fn: false
+    };
+
+    globalThis.finicky = {
+      getModifierKeys: () => modifierState,
+      matchHostnames: (matchers) => {
+        const matcherList = Array.isArray(matchers) ? matchers : [matchers];
+        return (url) => matcherList.some((matcher) =>
+          matcher instanceof RegExp ? matcher.test(url.hostname) : matcher === url.hostname
+        );
+      }
+    };
+
+    const config = (await import(pathToFileURL(process.argv[1]).href)).default;
+
+    if (config.defaultBrowser !== "Zen" || !Array.isArray(config.handlers)) {
+      throw new Error("Finicky config has an invalid default browser or handlers list");
+    }
+
+    if (!Array.isArray(config.rewrite)) {
+      throw new Error("Finicky config has an invalid rewrite list");
+    }
+
+    for (const rule of config.rewrite) {
+      const testUrl = new URL("https://example.com/page?utm_source=test&keep=yes");
+
+      if (typeof rule.match === "function" && rule.match(testUrl, { opener: null })) {
+        const rewrittenUrl = rule.url(testUrl, { opener: null });
+
+        if (rewrittenUrl.searchParams.has("utm_source") || rewrittenUrl.searchParams.get("keep") !== "yes") {
+          throw new Error("Finicky tracking rewrite removed the wrong parameters");
+        }
+      }
+    }
+
+    for (const handler of config.handlers) {
+      if (typeof handler.match === "function") {
+        handler.match(new URL("https://example.com"), { opener: null });
+      }
+    }
+
+    const resolveBrowser = (href, modifiers = {}) => {
+      Object.assign(modifierState, {
+        shift: false,
+        option: false,
+        command: false,
+        control: false,
+        capsLock: false,
+        fn: false
+      }, modifiers);
+
+      const url = new URL(href);
+      const handler = config.handlers.find((candidate) =>
+        typeof candidate.match === "function" && candidate.match(url, { opener: null })
+      );
+      return handler?.browser ?? config.defaultBrowser;
+    };
+
+    const routingCases = [
+      ["https://github.com", {}, "Zen"],
+      ["https://meet.google.com/example", {}, "Google Chrome"],
+      ["https://music.youtube.com", {}, "Brave Browser"],
+      ["https://github.com", { option: true }, "Google Chrome"],
+      ["https://github.com", { shift: true }, "Brave Browser"],
+      ["https://youtube.com", { control: true }, "Zen"],
+      ["https://youtube.com", { control: true, option: true }, "Zen"]
+    ];
+
+    for (const [href, modifiers, expectedBrowser] of routingCases) {
+      const actualBrowser = resolveBrowser(href, modifiers);
+      if (actualBrowser !== expectedBrowser) {
+        throw new Error(`Finicky routed ${href} to ${actualBrowser}, expected ${expectedBrowser}`);
+      }
+    }
+  ' "$repo_dir/finicky.ts"
 }
 
 run_check 'zsh syntax' zsh -n "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh
@@ -170,8 +261,10 @@ fi
 
 if command -v node >/dev/null 2>&1 && node --help 2>&1 | grep -q -- '--experimental-strip-types'; then
   run_check 'Finicky TypeScript syntax' node --experimental-strip-types --check "$repo_dir/finicky.ts"
+  run_check 'Finicky routing and rewrites' validate_finicky_config
 else
   skip 'Finicky TypeScript syntax (this Node version cannot check TypeScript)'
+  skip 'Finicky routing and rewrites (this Node version cannot load TypeScript)'
 fi
 
 ghostty_bin="$(command -v ghostty 2>/dev/null || true)"
@@ -199,7 +292,7 @@ if command -v aerospace >/dev/null 2>&1; then
   fi
 
   if [[ "$active_aerospace_config" == "$repo_dir/aerospace.toml" ]]; then
-    run_check 'AeroSpace config reload' aerospace reload-config
+    run_check 'AeroSpace config reload' aerospace reload-config --warnings-as-errors
   else
     skip 'AeroSpace config reload (this repo is not the active config)'
   fi

@@ -103,13 +103,19 @@ Log out and back in after running the script so `Displays have separate Spaces` 
 | `alt+shift+h/j/k/l` | Move window left/down/up/right |
 | `alt+1..0` / `alt+o` | Switch workspace |
 | `alt+shift+1..0` / `alt+shift+o` | Move window to workspace |
+| `alt+[` / `alt+]` | Previous/next workspace |
+| `alt+backtick` | Toggle current/previous workspace |
 | `alt+tab` | Focus next window, wrapping across monitors |
 | `alt+/` | Toggle tile orientation |
 | `alt+,` | Toggle accordion orientation |
 | `alt+-` / `alt+=` | Resize |
+| `alt+r` | Persistent resize mode |
 | `alt+f` | Fullscreen |
-| `alt+shift+f` | Toggle floating/tiling |
+| `alt+space` / `alt+shift+f` | Toggle floating/tiling |
+| `alt+b` / `alt+shift+b` / `ctrl+alt+b` | Zen / Chrome / Brave |
+| `alt+;` | One-shot app launcher mode |
 | `alt+shift+tab` | Move current workspace to next monitor |
+| `alt+m` | Focus next monitor |
 | `alt+shift+m` | Move focused window to next monitor |
 | `alt+shift+p` | Move sensitive apps off the focused monitor for screen share |
 | `alt+shift+a` | Restore app workspace routing and monitor arrangement |
@@ -139,8 +145,12 @@ This is intentionally manual because macOS does not reliably expose which displa
 
 Finicky keeps Zen as the default browser.
 
-Chrome handles Google work/auth/productivity links like Meet, Calendar, Gmail, Drive, Docs, Sheets, Slides, and Accounts.
+Chrome handles Google work/auth/productivity links like Meet, Calendar, Gmail, Drive, Docs, Sheets, Slides, Forms, Accounts, Chat, Gemini, and Cloud Console.
 
-Brave handles media links like YouTube, Twitch, Spotify web, and SoundCloud.
+Brave handles media links like YouTube, Twitch, Spotify web, SoundCloud, and Vimeo.
 
-Ambiguous links like GitHub, Notion, Linear, Figma, and Slack default to Zen. Hold Option while opening one to force Chrome, or Shift to force Brave.
+Modifier overrides apply to every link: hold Control for Zen, Option for Chrome, or Shift for Brave. Control wins over Option, which wins over Shift when multiple modifiers are held.
+
+Before routing, Finicky removes common ad-tracking parameters such as `utm_*`, `gclid`, `fbclid`, `msclkid`, and Mailchimp campaign IDs while preserving functional URL parameters.
+
+For direct browser access from anywhere, use `alt+b` for Zen, `alt+shift+b` for Chrome, or `ctrl+alt+b` for Brave. Press `alt+;` for the larger one-shot app launcher; the complete key map is in `SHORTCUTS.md`.
