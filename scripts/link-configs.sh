@@ -104,9 +104,11 @@ link_path() {
 
 link_path "$repo_dir/.zshrc" "$HOME/.zshrc"
 link_path "$repo_dir/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
+link_path "$repo_dir/atuin.toml" "$HOME/.config/atuin/config.toml"
 link_path "$repo_dir/ghostty.toml" "$HOME/.config/ghostty/config"
 link_path "$repo_dir/starship.toml" "$HOME/.config/starship.toml"
 link_path "$repo_dir/finicky.ts" "$HOME/.finicky.ts"
+link_path "$repo_dir/vscode/settings.json" "$HOME/Library/Application Support/Code/User/settings.json"
 
 aerospace_scripts_target="$HOME/.config/aerospace/scripts"
 

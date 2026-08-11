@@ -1,0 +1,19 @@
+# Local-first shell history. Sign-in and sync remain explicit choices.
+auto_sync = false
+update_check = false
+
+search_mode = "fuzzy"
+filter_mode = "global"
+workspaces = true
+style = "compact"
+inline_height = 30
+show_preview = true
+
+# Keep selected commands at the prompt for review before execution.
+enter_accept = false
+secrets_filter = true
+
+history_filter = [
+  "(?i)(api[_-]?key|access[_-]?token|auth[_-]?token|password|passwd|secret)=",
+  "(?i)--(api[_-]?key|token|password|secret)(=| )"
+]

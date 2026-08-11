@@ -260,11 +260,68 @@ validate_documentation() {
     grep -Fq 'scripts/setup-kiro-cli.sh' "$repo_dir/README.md" &&
     grep -Fq 'FZF, zoxide, Atuin, Python 3.13' "$repo_dir/README.md" &&
     grep -Fq 'Atuin owns `Ctrl-R`' "$repo_dir/README.md" &&
+    grep -Fq 'vscode/settings.json' "$repo_dir/README.md" &&
+    grep -Fq 'scripts/doctor.sh' "$repo_dir/README.md" &&
+    grep -Fq '`project`' "$repo_dir/README.md" &&
     grep -Fq 'scripts/check-config.sh' "$repo_dir/README.md"
 }
 
 validate_ghostty_terminal_keys() {
   grep -Fqx 'macos-option-as-alt = true' "$repo_dir/ghostty.toml"
+}
+
+validate_atuin_config() {
+  local temp_dir
+  local result=0
+
+  temp_dir="$(mktemp -d)"
+  mkdir -p "$temp_dir/config/atuin" "$temp_dir/data"
+  ln -s "$repo_dir/atuin.toml" "$temp_dir/config/atuin/config.toml"
+
+  XDG_CONFIG_HOME="$temp_dir/config" XDG_DATA_HOME="$temp_dir/data" \
+    atuin init zsh --disable-up-arrow --disable-ai >/dev/null || result=1
+
+  rm -rf "$temp_dir"
+  return "$result"
+}
+
+validate_vscode_settings() {
+  local python_bin
+  local secret_shape_pattern
+  local stale_setting_pattern
+
+  python_bin="$(command -v python3.13 2>/dev/null || command -v python3 2>/dev/null || true)"
+  [[ -n "$python_bin" ]] || return 1
+
+  "$python_bin" -m json.tool "$repo_dir/vscode/settings.json" >/dev/null || return 1
+
+  grep -Fq '"terminal.integrated.macOptionIsMeta": true' "$repo_dir/vscode/settings.json" &&
+    grep -Fq '"terminal.external.osxExec": "/Applications/Ghostty.app"' "$repo_dir/vscode/settings.json" &&
+    grep -Fq '"terminal.integrated.defaultProfile.osx": "zsh"' "$repo_dir/vscode/settings.json" ||
+    return 1
+
+  stale_setting_pattern='"(C_Cpp\.default\.compilerPath|remote\.WSL\.debug|amazonQ\.[^"]*|aws\.[^"]*|augment\.[^"]*|codeium\.[^"]*|easycode[^"]*|tabnine\.[^"]*|vscord\.[^"]*)"[[:space:]]*:'
+  if grep -Eq "$stale_setting_pattern" "$repo_dir/vscode/settings.json"; then
+    printf 'VS Code settings still contain an obsolete setting\n' >&2
+    return 1
+  fi
+
+  secret_shape_pattern='(sk-[A-Za-z0-9_-]{20,}|github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{20,}|[sr]k_live_[A-Za-z0-9]{20,})'
+  if grep -Eiq "$secret_shape_pattern" "$repo_dir/vscode/settings.json"; then
+    printf 'VS Code settings contain a credential-shaped value\n' >&2
+    return 1
+  fi
+
+  grep -Fq 'link_path "$repo_dir/vscode/settings.json"' "$repo_dir/scripts/link-configs.sh"
+}
+
+validate_workflow_helpers() {
+  grep -Fq 'for _zsh_module in path tools prompt aliases workflows local' "$repo_dir/.zshrc" &&
+    grep -Fq 'project() {' "$repo_dir/zsh/workflows.zsh" &&
+    grep -Fq 'doctor() {' "$repo_dir/zsh/workflows.zsh" &&
+    grep -Fq 'workday() {' "$repo_dir/zsh/workflows.zsh" &&
+    [[ -x "$repo_dir/scripts/doctor.sh" ]] &&
+    [[ -x "$repo_dir/scripts/workday.sh" ]]
 }
 
 validate_finicky_config() {
@@ -356,11 +413,14 @@ validate_finicky_config() {
 
 run_check 'zsh syntax' zsh -n "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh
 run_check 'zsh integration ordering' validate_zsh_integration_layout
+run_check 'shell workflow helpers' validate_workflow_helpers
 
 if command -v atuin >/dev/null 2>&1 && command -v fzf >/dev/null 2>&1 && command -v zoxide >/dev/null 2>&1; then
   run_check 'shell navigation tool integration' validate_shell_navigation_tools
+  run_check 'Atuin config' validate_atuin_config
 else
   skip 'shell navigation tool integration (Atuin, FZF, or zoxide is unavailable)'
+  skip 'Atuin config (Atuin is unavailable)'
 fi
 
 if [[ -r /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh && -r /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
@@ -382,6 +442,7 @@ run_check 'shell script executable permissions' validate_script_permissions
 run_check 'workspace routing stays synchronized' validate_workspace_routes
 run_check 'key documentation stays synchronized' validate_documentation
 run_check 'Ghostty Option key acts as Alt' validate_ghostty_terminal_keys
+run_check 'VS Code settings' validate_vscode_settings
 run_check 'clean whitespace' git -C "$repo_dir" diff --check
 
 tracked_ignored_files=''

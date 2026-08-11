@@ -2,6 +2,17 @@
 
 Open this overview with `alt+shift+s`.
 
+## Terminal workflow
+
+| Command / binding | Action |
+|---|---|
+| `ctrl+r` | Search shell history with Atuin |
+| `ctrl+t` | Insert files or directories with FZF |
+| `option+c` | Change directory with FZF in Ghostty and VS Code |
+| `z <name>` / `zi` | Jump to a remembered directory |
+| `project` | Fuzzy-switch Git repositories |
+| `workday` / `doctor` | Review the day or validate the environment |
+
 ## Workspaces
 
 | Workspace | Role | Apps |

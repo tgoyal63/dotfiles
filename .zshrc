@@ -10,7 +10,7 @@ if [[ ! -d "$DOTFILES_DIR/zsh" && -d "$HOME/dotfiles/zsh" ]]; then
   export DOTFILES_DIR="$HOME/dotfiles"
 fi
 
-for _zsh_module in path tools prompt aliases local; do
+for _zsh_module in path tools prompt aliases workflows local; do
   if [[ -r "$DOTFILES_DIR/zsh/${_zsh_module}.zsh" ]]; then
     source "$DOTFILES_DIR/zsh/${_zsh_module}.zsh"
   fi

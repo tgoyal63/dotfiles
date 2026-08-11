@@ -30,10 +30,14 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `ghostty.toml` | `~/.config/ghostty/config` | Ghostty theme and opacity |
 | `starship.toml` | `~/.config/starship.toml` | Prompt layout |
 | `finicky.ts` | `~/.finicky.ts` | Browser routing |
+| `atuin.toml` | `~/.config/atuin/config.toml` | Local-first, secret-filtered shell history |
+| `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | Sanitized VS Code user settings |
 | `scripts/install-brew-apps.sh` | run manually | Grouped Homebrew installer |
 | `scripts/link-configs.sh` | run manually | Safely create or refresh config symlinks |
 | `scripts/setup-kiro-cli.sh` | run manually | Install Kiro CLI's Zsh terminal integration |
 | `scripts/check-config.sh` | run manually | Validate shell and application configs |
+| `scripts/doctor.sh` | run with `doctor` | Validate the live macOS development environment |
+| `scripts/workday.sh` | run with `workday` | Summarize tools and repositories needing attention |
 | `scripts/macos/fix-mission-control.sh` | run manually | Mission Control/AeroSpace defaults |
 | `scripts/aerospace/workspace-settings.sh` | sourced by helper scripts | Global workspace, monitor, app routing, and privacy settings |
 | `SHORTCUTS.md` | opened by `alt+shift+s` | Quick shortcut overview document |
@@ -68,7 +72,7 @@ scripts/link-configs.sh --dry-run
 scripts/link-configs.sh
 ```
 
-The linker refreshes symlinks but refuses to overwrite regular files or directories. The `.zshrc` resolves the repo path automatically when symlinked. Put machine-specific shell settings in `zsh/local.zsh`; start from `zsh/local.zsh.example`.
+The linker refreshes symlinks but refuses to overwrite regular files or directories. This includes VS Code and Atuin, so back up an existing user config before the first link. The `.zshrc` resolves the repo path automatically when symlinked. Put machine-specific shell settings in `zsh/local.zsh`; start from `zsh/local.zsh.example`.
 
 ## Set Up Kiro CLI
 
@@ -94,9 +98,25 @@ The shell integrations avoid overlapping keybindings:
 | `z <name>` | Jump to a frequently used directory with zoxide |
 | `zi` | Interactively select a zoxide directory |
 
-Atuin owns `Ctrl-R`; its Up Arrow and AI bindings are disabled so standard shell navigation and Kiro remain unchanged. Atuin works locally without an account. Register or log in only if encrypted cross-device history sync is wanted.
+Atuin owns `Ctrl-R`; its Up Arrow and AI bindings are disabled so standard shell navigation and Kiro remain unchanged. History stays local, common secret-bearing commands are filtered, and a selected result is placed at the prompt for review instead of running immediately. Register or log in only if encrypted cross-device history sync is wanted.
 
 Memo provides terminal access to Apple Notes and Reminders. Start with `memo notes`, `memo notes --search`, and `memo rem`. The Obsidian CLI requires the Obsidian app to be running; check it with `obsidian --help` after launching the app.
+
+Daily helpers:
+
+| Command | Action |
+|---|---|
+| `project` | Fuzzy-switch to any Git repository under `$WORKSPACE_ROOT` or `~/projects` |
+| `note [search|add|list|folders]` | Search or manage Apple Notes through Memo |
+| `remind [list|add|complete|edit|delete]` | Manage Apple Reminders through Memo |
+| `workday` | Show OrbStack/Docker status and repositories with local changes |
+| `doctor` | Validate commands, apps, dotfile links, Docker, secrets, and repo configs |
+
+## VS Code
+
+The managed settings keep only core settings and configuration for installed extensions. They remove revoked credential fields, obsolete AI-extension settings, Windows/WSL paths, old terminal-session variables, and missing themes. The integrated terminal treats Option as Meta, uses Zsh, and opens external terminals in Ghostty.
+
+Never store API keys or tokens in `vscode/settings.json`. Use environment variables or a system keychain instead.
 
 ## Validate Configs
 
@@ -106,7 +126,7 @@ Run the dependency-free repository checks after making changes:
 scripts/check-config.sh
 ```
 
-The checker validates shell syntax, integration ordering and runtime hooks, Kiro CLI shell setup and completion, executable permissions, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
+The checker validates shell syntax, integration ordering and runtime hooks, workflow helpers, Atuin and VS Code settings, Kiro CLI shell setup and completion, executable permissions, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
 
 ## Mission Control Fix
 
