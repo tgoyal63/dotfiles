@@ -14,7 +14,7 @@ Open this overview with `alt+shift+s`.
 | `6` | Creation | Audacity |
 | `7` | Notes / tasks | Obsidian, Notion, Notes, Calendar, Todoist, Things |
 | `8` | Work browser | Chrome, Brave |
-| `9` | Dev utilities | Docker, OrbStack, Postman, Insomnia |
+| `9` | Dev utilities | OrbStack, Postman, Insomnia |
 | `0` | Misc | Everything else |
 | `o` | OBS | OBS Studio |
 

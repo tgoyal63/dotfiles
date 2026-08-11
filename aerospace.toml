@@ -269,10 +269,6 @@ run = "move-node-to-workspace 8"
 
 # 9: Dev utilities
 [[on-window-detected]]
-if.app-name-regex-substring = "docker"
-run = "move-node-to-workspace 9"
-
-[[on-window-detected]]
 if.app-name-regex-substring = "orbstack"
 run = "move-node-to-workspace 9"
 

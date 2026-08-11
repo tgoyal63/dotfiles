@@ -29,7 +29,6 @@ obsidian|7
 notion|7
 todoist|7
 things|7
-docker|9
 orbstack|9
 postman|9
 insomnia|9'

@@ -9,7 +9,7 @@ Groups:
   all       Install every group. This is the default.
   core      AeroSpace, Ghostty, Finicky, Starship, fnm, Bun, Oh My Zsh, Zsh plugins
   browsers  Zen, Chrome, Brave, Firefox
-  dev       VS Code, Docker Desktop, OrbStack, Postman, Insomnia, Kiro CLI
+  dev       VS Code, OrbStack, Postman, Insomnia, Kiro CLI
   comms     ChatGPT, Discord, Telegram, WhatsApp
   notes     Obsidian, Notion, Todoist, Things
   media     Spotify, OBS, Audacity, LocalSend
@@ -89,7 +89,7 @@ install_browsers() {
 }
 
 install_dev() {
-  install_casks visual-studio-code docker orbstack postman insomnia kiro-cli
+  install_casks visual-studio-code orbstack postman insomnia kiro-cli
 }
 
 install_comms() {

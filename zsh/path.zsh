@@ -13,6 +13,7 @@ _path_prepend "/opt/homebrew/opt/libpq/bin"
 _path_prepend "$HOME/bin"
 _path_prepend "$HOME/.local/bin"
 _path_prepend "$HOME/.opencode/bin"
+_path_prepend "$HOME/.orbstack/bin"
 
 export BUN_INSTALL="$HOME/.bun"
 _path_prepend "$BUN_INSTALL/bin"
