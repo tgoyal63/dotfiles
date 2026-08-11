@@ -7,11 +7,11 @@ Usage: scripts/install-brew-apps.sh [group ...]
 
 Groups:
   all       Install every group. This is the default.
-  core      AeroSpace, Ghostty, Finicky, Starship, fnm, Bun, Oh My Zsh, Zsh plugins
+  core      Shell, navigation/history tools, AeroSpace, Ghostty, and Finicky
   browsers  Zen, Chrome, Brave, Firefox
   dev       VS Code, OrbStack, Postman, Insomnia, Kiro CLI
   comms     ChatGPT, Discord, Telegram, WhatsApp
-  notes     Obsidian, Notion, Todoist, Things
+  notes     Obsidian, Notion, Todoist, Things, and Memo
   media     Spotify, OBS, Audacity, LocalSend
 
 Examples:
@@ -80,7 +80,7 @@ install_cask() {
 install_core() {
   install_shell_tools
   brew tap nikitabobko/tap
-  install_formulae fnm starship zsh-autosuggestions zsh-syntax-highlighting
+  install_formulae atuin fnm fzf python@3.13 starship zoxide zsh-autosuggestions zsh-syntax-highlighting
   install_casks aerospace finicky ghostty
 }
 
@@ -97,6 +97,8 @@ install_comms() {
 }
 
 install_notes() {
+  brew tap antoniorodr/memo
+  install_formulae memo
   install_casks obsidian notion todoist-app thingsmac
 }
 

@@ -57,7 +57,7 @@ scripts/install-brew-apps.sh notes media
 Available groups are `core`, `browsers`, `dev`, `comms`, `notes`, `media`, and `all`.
 
 The installer is idempotent for casks: Homebrew-managed apps are skipped, unavailable optional casks are skipped, existing unmanaged apps are adopted when possible, and existing app conflicts are skipped instead of stopping the whole install.
-The `core` group includes zsh-autosuggestions and zsh-syntax-highlighting. The `dev` group includes Kiro CLI.
+The `core` group includes FZF, zoxide, Atuin, Python 3.13, zsh-autosuggestions, and zsh-syntax-highlighting. The `dev` group includes Kiro CLI. The `notes` group includes Memo and the Obsidian app; Obsidian's official CLI is bundled with the app rather than installed as a separate Homebrew formula.
 
 ## Link Configs
 
@@ -81,6 +81,22 @@ scripts/setup-kiro-cli.sh
 The setup script safely exposes Kiro CLI and its terminal helper under `~/.local/bin`, then installs Kiro's generated pre/post shell integration. Standard `kiro-cli` tab completion is loaded by `.zshrc`.
 
 Kiro inline AI suggestions remain opt-in. Keep them disabled while using zsh-autosuggestions unless you intentionally want Kiro to replace the local history-based suggestion provider.
+
+## Shell Productivity
+
+The shell integrations avoid overlapping keybindings:
+
+| Command / binding | Action |
+|---|---|
+| `Ctrl-R` | Search command history with Atuin |
+| `Ctrl-T` | Insert files or directories with FZF |
+| `Alt-C` | Change directory with FZF |
+| `z <name>` | Jump to a frequently used directory with zoxide |
+| `zi` | Interactively select a zoxide directory |
+
+Atuin owns `Ctrl-R`; its Up Arrow and AI bindings are disabled so standard shell navigation and Kiro remain unchanged. Atuin works locally without an account. Register or log in only if encrypted cross-device history sync is wanted.
+
+Memo provides terminal access to Apple Notes and Reminders. Start with `memo notes`, `memo notes --search`, and `memo rem`. The Obsidian CLI requires the Obsidian app to be running; check it with `obsidian --help` after launching the app.
 
 ## Validate Configs
 

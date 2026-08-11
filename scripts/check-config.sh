@@ -78,6 +78,9 @@ validate_zsh_integration_layout() {
   local post_line
   local completion_line
   local highlighting_line
+  local fzf_line
+  local zoxide_line
+  local atuin_line
 
   starship_count="$(grep -hF 'starship init zsh' "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh | wc -l | tr -d '[:space:]')"
   if [[ "$starship_count" != 1 ]]; then
@@ -91,8 +94,11 @@ validate_zsh_integration_layout() {
   post_line="$(grep -nF 'zshrc.post.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
   completion_line="$(grep -nF 'source <(kiro-cli completion zsh)' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
   highlighting_line="$(grep -nF 'source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  fzf_line="$(grep -nF 'source <(fzf --zsh)' "$repo_dir/zsh/tools.zsh" | head -n 1 | cut -d: -f1)"
+  zoxide_line="$(grep -nF 'eval "$(zoxide init zsh)"' "$repo_dir/zsh/tools.zsh" | head -n 1 | cut -d: -f1)"
+  atuin_line="$(grep -nF 'eval "$(atuin init zsh --disable-up-arrow --disable-ai)"' "$repo_dir/zsh/tools.zsh" | head -n 1 | cut -d: -f1)"
 
-  if [[ -z "$pre_line" || -z "$module_line" || -z "$autosuggestions_line" || -z "$post_line" || -z "$completion_line" || -z "$highlighting_line" ]]; then
+  if [[ -z "$pre_line" || -z "$module_line" || -z "$autosuggestions_line" || -z "$post_line" || -z "$completion_line" || -z "$highlighting_line" || -z "$fzf_line" || -z "$zoxide_line" || -z "$atuin_line" ]]; then
     printf 'One or more required Zsh integration lines are missing\n' >&2
     return 1
   fi
@@ -102,8 +108,36 @@ validate_zsh_integration_layout() {
     return 1
   fi
 
+  if ! ((fzf_line < zoxide_line && zoxide_line < atuin_line)); then
+    printf 'FZF, zoxide, and Atuin are not loaded in the required order\n' >&2
+    return 1
+  fi
+
   grep -Fq 'if [[ -r /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]' "$repo_dir/.zshrc" &&
     grep -Fq 'if [[ -r /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]' "$repo_dir/.zshrc"
+}
+
+validate_shell_navigation_tools() {
+  local tool
+  local temp_dir
+  local result=0
+
+  for tool in atuin fzf zoxide; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      printf 'Missing shell navigation tool: %s\n' "$tool" >&2
+      return 1
+    fi
+  done
+
+  temp_dir="$(mktemp -d)"
+
+  fzf --zsh | zsh -n || result=1
+  zoxide init zsh | zsh -n || result=1
+  XDG_CONFIG_HOME="$temp_dir/config" XDG_DATA_HOME="$temp_dir/data" \
+    atuin init zsh --disable-up-arrow --disable-ai | zsh -n || result=1
+
+  rm -rf "$temp_dir"
+  return "$result"
 }
 
 validate_zsh_plugin_runtime() {
@@ -224,7 +258,8 @@ validate_documentation() {
     grep -Fq '`alt+b` / `alt+shift+b` / `ctrl+alt+b`' "$repo_dir/README.md" &&
     grep -Fq 'scripts/link-configs.sh' "$repo_dir/README.md" &&
     grep -Fq 'scripts/setup-kiro-cli.sh' "$repo_dir/README.md" &&
-    grep -Fq 'zsh-autosuggestions and zsh-syntax-highlighting' "$repo_dir/README.md" &&
+    grep -Fq 'FZF, zoxide, Atuin, Python 3.13' "$repo_dir/README.md" &&
+    grep -Fq 'Atuin owns `Ctrl-R`' "$repo_dir/README.md" &&
     grep -Fq 'scripts/check-config.sh' "$repo_dir/README.md"
 }
 
@@ -317,6 +352,12 @@ validate_finicky_config() {
 
 run_check 'zsh syntax' zsh -n "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh
 run_check 'zsh integration ordering' validate_zsh_integration_layout
+
+if command -v atuin >/dev/null 2>&1 && command -v fzf >/dev/null 2>&1 && command -v zoxide >/dev/null 2>&1; then
+  run_check 'shell navigation tool integration' validate_shell_navigation_tools
+else
+  skip 'shell navigation tool integration (Atuin, FZF, or zoxide is unavailable)'
+fi
 
 if [[ -r /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh && -r /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
   run_check 'zsh plugin runtime hooks' validate_zsh_plugin_runtime
