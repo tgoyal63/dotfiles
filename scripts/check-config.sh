@@ -263,6 +263,10 @@ validate_documentation() {
     grep -Fq 'scripts/check-config.sh' "$repo_dir/README.md"
 }
 
+validate_ghostty_terminal_keys() {
+  grep -Fqx 'macos-option-as-alt = true' "$repo_dir/ghostty.toml"
+}
+
 validate_finicky_config() {
   node --experimental-strip-types --input-type=module -e '
     import { pathToFileURL } from "node:url";
@@ -377,6 +381,7 @@ run_check 'shell script syntax' validate_script_syntax
 run_check 'shell script executable permissions' validate_script_permissions
 run_check 'workspace routing stays synchronized' validate_workspace_routes
 run_check 'key documentation stays synchronized' validate_documentation
+run_check 'Ghostty Option key acts as Alt' validate_ghostty_terminal_keys
 run_check 'clean whitespace' git -C "$repo_dir" diff --check
 
 tracked_ignored_files=''
