@@ -32,6 +32,7 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `finicky.ts` | `~/.finicky.ts` | Browser routing |
 | `scripts/install-brew-apps.sh` | run manually | Grouped Homebrew installer |
 | `scripts/link-configs.sh` | run manually | Safely create or refresh config symlinks |
+| `scripts/setup-kiro-cli.sh` | run manually | Install Kiro CLI's Zsh terminal integration |
 | `scripts/check-config.sh` | run manually | Validate shell and application configs |
 | `scripts/macos/fix-mission-control.sh` | run manually | Mission Control/AeroSpace defaults |
 | `scripts/aerospace/workspace-settings.sh` | sourced by helper scripts | Global workspace, monitor, app routing, and privacy settings |
@@ -56,6 +57,7 @@ scripts/install-brew-apps.sh notes media
 Available groups are `core`, `browsers`, `dev`, `comms`, `notes`, `media`, and `all`.
 
 The installer is idempotent for casks: Homebrew-managed apps are skipped, unavailable optional casks are skipped, existing unmanaged apps are adopted when possible, and existing app conflicts are skipped instead of stopping the whole install.
+The `core` group includes zsh-autosuggestions and zsh-syntax-highlighting. The `dev` group includes Kiro CLI.
 
 ## Link Configs
 
@@ -68,6 +70,18 @@ scripts/link-configs.sh
 
 The linker refreshes symlinks but refuses to overwrite regular files or directories. The `.zshrc` resolves the repo path automatically when symlinked. Put machine-specific shell settings in `zsh/local.zsh`; start from `zsh/local.zsh.example`.
 
+## Set Up Kiro CLI
+
+After installing the `dev` group and linking the configs, install Kiro CLI's Zsh integration:
+
+```bash
+scripts/setup-kiro-cli.sh
+```
+
+The setup script safely exposes Kiro CLI and its terminal helper under `~/.local/bin`, then installs Kiro's generated pre/post shell integration. Standard `kiro-cli` tab completion is loaded by `.zshrc`.
+
+Kiro inline AI suggestions remain opt-in. Keep them disabled while using zsh-autosuggestions unless you intentionally want Kiro to replace the local history-based suggestion provider.
+
 ## Validate Configs
 
 Run the dependency-free repository checks after making changes:
@@ -76,7 +90,7 @@ Run the dependency-free repository checks after making changes:
 scripts/check-config.sh
 ```
 
-The checker validates shell syntax, executable permissions, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
+The checker validates shell syntax, integration ordering and runtime hooks, Kiro CLI shell setup and completion, executable permissions, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
 
 ## Mission Control Fix
 

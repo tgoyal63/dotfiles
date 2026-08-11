@@ -70,6 +70,80 @@ validate_script_permissions() {
   return "$status"
 }
 
+validate_zsh_integration_layout() {
+  local starship_count
+  local pre_line
+  local module_line
+  local autosuggestions_line
+  local post_line
+  local completion_line
+  local highlighting_line
+
+  starship_count="$(grep -hF 'starship init zsh' "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh | wc -l | tr -d '[:space:]')"
+  if [[ "$starship_count" != 1 ]]; then
+    printf 'Expected exactly one Starship initialization, found %s\n' "$starship_count" >&2
+    return 1
+  fi
+
+  pre_line="$(grep -nF 'zshrc.pre.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  module_line="$(grep -nF 'for _zsh_module in' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  autosuggestions_line="$(grep -nF 'source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  post_line="$(grep -nF 'zshrc.post.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  completion_line="$(grep -nF 'source <(kiro-cli completion zsh)' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  highlighting_line="$(grep -nF 'source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+
+  if [[ -z "$pre_line" || -z "$module_line" || -z "$autosuggestions_line" || -z "$post_line" || -z "$completion_line" || -z "$highlighting_line" ]]; then
+    printf 'One or more required Zsh integration lines are missing\n' >&2
+    return 1
+  fi
+
+  if ! ((pre_line < module_line && module_line < autosuggestions_line && autosuggestions_line < completion_line && completion_line < highlighting_line && highlighting_line < post_line)); then
+    printf 'Zsh integrations are not loaded in the required order\n' >&2
+    return 1
+  fi
+
+  grep -Fq 'if [[ -r /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]' "$repo_dir/.zshrc" &&
+    grep -Fq 'if [[ -r /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]' "$repo_dir/.zshrc"
+}
+
+validate_zsh_plugin_runtime() {
+  TERM=xterm-256color zsh -dfc '
+    source "$1"
+    source "$2"
+    source "$3"
+
+    (( ${+functions[prompt_starship_precmd]} )) || exit 1
+    (( ${+functions[_zsh_autosuggest_start]} )) || exit 1
+    (( ${+functions[_zsh_highlight_main__precmd_hook]} )) || exit 1
+  ' zsh \
+    "$repo_dir/zsh/prompt.zsh" \
+    /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+    /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+}
+
+validate_kiro_shell_integration() {
+  local support_dir="$HOME/Library/Application Support/kiro-cli/shell"
+  local required_path
+  local status=0
+
+  for required_path in \
+    "$HOME/.local/bin/kiro-cli" \
+    "$HOME/.local/bin/kiro-cli-term" \
+    "$support_dir/zshrc.pre.zsh" \
+    "$support_dir/zshrc.post.zsh"; do
+    if [[ ! -e "$required_path" ]]; then
+      printf 'Missing Kiro CLI integration path: %s\n' "$required_path" >&2
+      status=1
+    fi
+  done
+
+  return "$status"
+}
+
+validate_kiro_completion() {
+  kiro-cli completion zsh | zsh -n
+}
+
 extract_aerospace_routes() {
   awk '
     /^\[\[on-window-detected\]\]$/ {
@@ -149,6 +223,8 @@ validate_documentation() {
     grep -Fq '| Hold `Option` while opening any link | Force Chrome |' "$repo_dir/SHORTCUTS.md" &&
     grep -Fq '`alt+b` / `alt+shift+b` / `ctrl+alt+b`' "$repo_dir/README.md" &&
     grep -Fq 'scripts/link-configs.sh' "$repo_dir/README.md" &&
+    grep -Fq 'scripts/setup-kiro-cli.sh' "$repo_dir/README.md" &&
+    grep -Fq 'zsh-autosuggestions and zsh-syntax-highlighting' "$repo_dir/README.md" &&
     grep -Fq 'scripts/check-config.sh' "$repo_dir/README.md"
 }
 
@@ -240,6 +316,22 @@ validate_finicky_config() {
 }
 
 run_check 'zsh syntax' zsh -n "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh
+run_check 'zsh integration ordering' validate_zsh_integration_layout
+
+if [[ -r /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh && -r /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+  run_check 'zsh plugin runtime hooks' validate_zsh_plugin_runtime
+else
+  skip 'zsh plugin runtime hooks (Homebrew plugins are unavailable)'
+fi
+
+if command -v kiro-cli >/dev/null 2>&1; then
+  run_check 'Kiro CLI shell integration' validate_kiro_shell_integration
+  run_check 'Kiro CLI completion' validate_kiro_completion
+else
+  skip 'Kiro CLI shell integration (Kiro CLI is unavailable)'
+  skip 'Kiro CLI completion (Kiro CLI is unavailable)'
+fi
+
 run_check 'shell script syntax' validate_script_syntax
 run_check 'shell script executable permissions' validate_script_permissions
 run_check 'workspace routing stays synchronized' validate_workspace_routes

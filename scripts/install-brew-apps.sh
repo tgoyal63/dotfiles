@@ -7,9 +7,9 @@ Usage: scripts/install-brew-apps.sh [group ...]
 
 Groups:
   all       Install every group. This is the default.
-  core      AeroSpace, Ghostty, Finicky, Starship, fnm, Bun, Oh My Zsh
+  core      AeroSpace, Ghostty, Finicky, Starship, fnm, Bun, Oh My Zsh, Zsh plugins
   browsers  Zen, Chrome, Brave, Firefox
-  dev       VS Code, Docker Desktop, OrbStack, Postman, Insomnia
+  dev       VS Code, Docker Desktop, OrbStack, Postman, Insomnia, Kiro CLI
   comms     ChatGPT, Discord, Telegram, WhatsApp
   notes     Obsidian, Notion, Todoist, Things
   media     Spotify, OBS, Audacity, LocalSend
@@ -80,7 +80,7 @@ install_cask() {
 install_core() {
   install_shell_tools
   brew tap nikitabobko/tap
-  install_formulae fnm starship
+  install_formulae fnm starship zsh-autosuggestions zsh-syntax-highlighting
   install_casks aerospace finicky ghostty
 }
 
@@ -89,7 +89,7 @@ install_browsers() {
 }
 
 install_dev() {
-  install_casks visual-studio-code docker orbstack postman insomnia
+  install_casks visual-studio-code docker orbstack postman insomnia kiro-cli
 }
 
 install_comms() {
