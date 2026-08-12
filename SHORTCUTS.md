@@ -11,7 +11,10 @@ Open this overview with `alt+shift+s`.
 | `option+c` | Change directory with FZF in Ghostty and VS Code |
 | `z <name>` / `zi` | Jump to a remembered directory |
 | `project` | Fuzzy-switch Git repositories |
-| `workday` / `doctor` | Review the day or validate the environment |
+| `note search [query]` | Select, preview, and print an Apple Note |
+| `remind today` / `remind add "Task"` | Review or capture Apple Reminders |
+| `workday` / `workday --quick` | Full daily brief / local-only brief |
+| `doctor` | Validate the complete environment |
 
 ## Workspaces
 

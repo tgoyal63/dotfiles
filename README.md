@@ -32,6 +32,7 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `finicky.ts` | `~/.finicky.ts` | Browser routing |
 | `atuin.toml` | `~/.config/atuin/config.toml` | Local-first, secret-filtered shell history |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | Sanitized VS Code user settings |
+| `Brewfile` | used by Homebrew Bundle | Reproducible formula, cask, tap, and VS Code extension baseline |
 | `scripts/install-brew-apps.sh` | run manually | Grouped Homebrew installer |
 | `scripts/link-configs.sh` | run manually | Safely create or refresh config symlinks |
 | `scripts/setup-kiro-cli.sh` | run manually | Install Kiro CLI's Zsh terminal integration |
@@ -45,7 +46,7 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 
 ## Install Apps
 
-Install everything:
+Install the complete Brewfile baseline:
 
 ```bash
 scripts/install-brew-apps.sh
@@ -60,8 +61,16 @@ scripts/install-brew-apps.sh notes media
 
 Available groups are `core`, `browsers`, `dev`, `comms`, `notes`, `media`, and `all`.
 
-The installer is idempotent for casks: Homebrew-managed apps are skipped, unavailable optional casks are skipped, existing unmanaged apps are adopted when possible, and existing app conflicts are skipped instead of stopping the whole install.
-The `core` group includes FZF, zoxide, Atuin, Python 3.13, zsh-autosuggestions, and zsh-syntax-highlighting. The `dev` group includes Kiro CLI. The `notes` group includes Memo and the Obsidian app; Obsidian's official CLI is bundled with the app rather than installed as a separate Homebrew formula.
+With no group, the installer uses `brew bundle --no-upgrade` and `Brewfile` as the source of truth. It installs missing entries without broadly upgrading or removing software, and it never runs `brew bundle cleanup`. Selected groups retain the existing idempotent cask adoption behavior.
+The `core` group includes FZF, zoxide, Atuin, Python 3.13, RemindCtl, zsh-autosuggestions, and zsh-syntax-highlighting. The `dev` group includes Kiro CLI. The `notes` group includes Memo and the Obsidian app; Obsidian's official CLI is bundled with the app rather than installed as a separate Homebrew formula.
+
+Check the baseline without installing or removing anything:
+
+```bash
+brew bundle check --no-upgrade --file Brewfile
+```
+
+The Brewfile records the Homebrew-managed baseline, including the applications whose consolidation has been deferred. It intentionally excludes software without a valid Homebrew receipt.
 
 ## Link Configs
 
@@ -98,19 +107,26 @@ The shell integrations avoid overlapping keybindings:
 | `z <name>` | Jump to a frequently used directory with zoxide |
 | `zi` | Interactively select a zoxide directory |
 
-Atuin owns `Ctrl-R`; its Up Arrow and AI bindings are disabled so standard shell navigation and Kiro remain unchanged. History stays local, common secret-bearing commands are filtered, and a selected result is placed at the prompt for review instead of running immediately. Register or log in only if encrypted cross-device history sync is wanted.
+Atuin owns `Ctrl-R`; its Up Arrow and AI bindings are disabled so standard shell navigation and Kiro remain unchanged. History stays local, common secret-bearing commands are filtered, and a selected result is placed at the prompt for review instead of running immediately. Import the existing history once with `atuin import zsh`. Register or log in only if encrypted cross-device history sync is wanted.
 
-Memo provides terminal access to Apple Notes and Reminders. Start with `memo notes`, `memo notes --search`, and `memo rem`. The Obsidian CLI requires the Obsidian app to be running; check it with `obsidian --help` after launching the app.
+Memo provides Apple Notes access. `note search` uses a repo-managed FZF picker: the preview shows the note and Enter prints the selected note in the terminal. RemindCtl provides the Reminders workflow with due-date filters, search, priorities, URLs, and recurring reminders. Run `remind authorize` once if macOS has not granted access. The Obsidian CLI requires the Obsidian app to be running; check it with `obsidian --help` after launching the app.
 
 Daily helpers:
 
 | Command | Action |
 |---|---|
 | `project` | Fuzzy-switch to any Git repository under `$WORKSPACE_ROOT` or `~/projects` |
-| `note [search|add|list|folders]` | Search or manage Apple Notes through Memo |
-| `remind [list|add|complete|edit|delete]` | Manage Apple Reminders through Memo |
-| `workday` | Show OrbStack/Docker status and repositories with local changes |
+| `note [search [query]|add|list|view N|edit|delete|folders|open]` | Search or manage Apple Notes through Memo |
+| `remind [today|overdue|week|search|add|edit|complete|delete|lists|app]` | Manage Apple Reminders through RemindCtl |
+| `workday` | Daily calendar, reminders, environment, repository, GitHub, and AI-usage dashboard |
+| `workday --quick` | Run the dashboard without GitHub or CodexBar network requests |
 | `doctor` | Validate commands, apps, dotfile links, Docker, secrets, and repo configs |
+
+`workday` derives up to three suggested priorities from overdue reminders, local changes, unpushed or behind repositories, and GitHub review requests. GitHub data appears after `gh auth login`; CodexBar failures are contained and never stop the report.
+
+## Login Apps
+
+AeroSpace starts only Discord, Ghostty, Zen, and Visual Studio Code. All other applications remain available through `alt+;` and their direct workspace shortcuts.
 
 ## VS Code
 

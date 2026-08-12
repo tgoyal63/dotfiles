@@ -318,10 +318,41 @@ validate_vscode_settings() {
 validate_workflow_helpers() {
   grep -Fq 'for _zsh_module in path tools prompt aliases workflows local' "$repo_dir/.zshrc" &&
     grep -Fq 'project() {' "$repo_dir/zsh/workflows.zsh" &&
+    grep -Fq '_note_search() {' "$repo_dir/zsh/workflows.zsh" &&
+    grep -Fq 'remindctl show' "$repo_dir/zsh/workflows.zsh" &&
     grep -Fq 'doctor() {' "$repo_dir/zsh/workflows.zsh" &&
     grep -Fq 'workday() {' "$repo_dir/zsh/workflows.zsh" &&
     [[ -x "$repo_dir/scripts/doctor.sh" ]] &&
     [[ -x "$repo_dir/scripts/workday.sh" ]]
+}
+
+validate_aerospace_startup_apps() {
+  local startup_block
+  local expected_apps
+  local actual_apps
+
+  startup_block="$(sed -n '/^after-startup-command = \[/,/^\]/p' "$repo_dir/aerospace.toml")"
+  expected_apps="$(printf '%s\n' Discord Ghostty Zen 'Visual Studio Code' | sort)"
+  actual_apps="$(
+    printf '%s\n' "$startup_block" |
+      sed -nE "s/.*open -a ('([^']+)'|([^\"]+))\".*/\2\3/p" |
+      sort
+  )"
+
+  if [[ "$actual_apps" != "$expected_apps" ]]; then
+    diff -u <(printf '%s\n' "$expected_apps") <(printf '%s\n' "$actual_apps") || true
+    return 1
+  fi
+}
+
+validate_brewfile() {
+  [[ -f "$repo_dir/Brewfile" ]] &&
+    grep -Fq 'brew "steipete/tap/remindctl"' "$repo_dir/Brewfile" &&
+    grep -Fq 'cask "orbstack"' "$repo_dir/Brewfile" &&
+    grep -Fq 'cask "kiro-cli"' "$repo_dir/Brewfile" &&
+    grep -Fq 'vscode "openai.chatgpt"' "$repo_dir/Brewfile" &&
+    grep -Fq 'brew bundle install --no-upgrade --file "$repo_dir/Brewfile"' "$repo_dir/scripts/install-brew-apps.sh" &&
+    ruby -c "$repo_dir/Brewfile" >/dev/null
 }
 
 validate_finicky_config() {
@@ -414,6 +445,8 @@ validate_finicky_config() {
 run_check 'zsh syntax' zsh -n "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh
 run_check 'zsh integration ordering' validate_zsh_integration_layout
 run_check 'shell workflow helpers' validate_workflow_helpers
+run_check 'AeroSpace startup apps' validate_aerospace_startup_apps
+run_check 'Homebrew bundle' validate_brewfile
 
 if command -v atuin >/dev/null 2>&1 && command -v fzf >/dev/null 2>&1 && command -v zoxide >/dev/null 2>&1; then
   run_check 'shell navigation tool integration' validate_shell_navigation_tools

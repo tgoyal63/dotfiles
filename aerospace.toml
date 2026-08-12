@@ -2,14 +2,10 @@ config-version = 2
 
 # Lean login stack. Everything else is routed when opened manually.
 after-startup-command = [
+  "exec-and-forget open -a Discord",
   "exec-and-forget open -a Ghostty",
   "exec-and-forget open -a 'Zen'",
-  "exec-and-forget open -a Discord",
   "exec-and-forget open -a 'Visual Studio Code'",
-  "exec-and-forget open -a ChatGPT",
-  "exec-and-forget open -a Spotify",
-  "exec-and-forget open -a WhatsApp",
-  "exec-and-forget open -a 'OBS'",
   "workspace 1"
 ]
 

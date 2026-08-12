@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+repo_dir="$(cd -- "$script_dir/.." && pwd -P)"
+
 usage() {
   cat <<'EOF'
 Usage: scripts/install-brew-apps.sh [group ...]
 
 Groups:
-  all       Install every group. This is the default.
+  all       Install the complete Brewfile baseline. This is the default.
   core      Shell, navigation/history tools, AeroSpace, Ghostty, and Finicky
   browsers  Zen, Chrome, Brave, Firefox
   dev       VS Code, OrbStack, Postman, Insomnia, Kiro CLI
@@ -29,6 +32,11 @@ install_shell_tools() {
   if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
     RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
   fi
+}
+
+install_bundle() {
+  install_shell_tools
+  brew bundle install --no-upgrade --file "$repo_dir/Brewfile"
 }
 
 install_formulae() {
@@ -80,7 +88,8 @@ install_cask() {
 install_core() {
   install_shell_tools
   brew tap nikitabobko/tap
-  install_formulae atuin fnm fzf python@3.13 starship zoxide zsh-autosuggestions zsh-syntax-highlighting
+  brew tap steipete/tap
+  install_formulae atuin fnm fzf python@3.13 starship steipete/tap/remindctl zoxide zsh-autosuggestions zsh-syntax-highlighting
   install_casks aerospace finicky ghostty
 }
 
@@ -114,14 +123,7 @@ install_group() {
     comms) install_comms ;;
     notes) install_notes ;;
     media) install_media ;;
-    all)
-      install_core
-      install_browsers
-      install_dev
-      install_comms
-      install_notes
-      install_media
-      ;;
+    all) install_bundle ;;
     -h|--help|help)
       usage
       exit 0
