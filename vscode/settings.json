@@ -82,8 +82,6 @@
   "github.copilot.nextEditSuggestions.enabled": true,
   "githubPullRequests.createOnPublishBranch": "never",
   "githubPullRequests.pullBranch": "never",
-  "gitlens.ai.model": "vscode",
-  "gitlens.ai.vscode.model": "copilot:gpt-4.1",
   "gitlens.views.repositories.compact": true,
   "gitlens.views.repositories.showBranches": false,
   "javascript.updateImportsOnFileMove.enabled": "always",
