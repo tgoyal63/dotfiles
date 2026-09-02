@@ -23,13 +23,14 @@ Open this overview with `alt+shift+s`.
 | `1` | Dev / terminal | Ghostty, VS Code |
 | `2` | Web | Zen Browser |
 | `3` | AI | ChatGPT, Codex |
-| `4` | Comms | Discord, WhatsApp, Telegram, Mail |
+| `4` | Discord / comms | Discord, Telegram, Mail |
 | `5` | Media | Spotify |
-| `6` | Creation | Audacity |
+| `6` | WhatsApp / creation | WhatsApp, Audacity |
 | `7` | Notes / tasks | Obsidian, Notion, Notes, Calendar, Todoist, Things |
 | `8` | Work browser | Chrome, Brave |
 | `9` | Dev utilities | OrbStack, Postman, Insomnia |
 | `0` | Misc | Everything else |
+| `c` | Discord Canary | Discord Canary |
 | `o` | OBS | OBS Studio |
 
 ## Quick Controls
@@ -59,8 +60,8 @@ Open this overview with `alt+shift+s`.
 
 | Keys | Action |
 |---|---|
-| `alt+1..0` / `alt+o` | Switch directly to a workspace |
-| `alt+shift+1..0` / `alt+shift+o` | Move the focused window to a workspace |
+| `alt+1..0` / `alt+c` / `alt+o` | Switch directly to a workspace |
+| `alt+shift+1..0` / `alt+shift+c` / `alt+shift+o` | Move the focused window to a workspace |
 | `alt+backtick` | Toggle current and previous workspace |
 | `alt+[` / `alt+]` | Switch to previous/next workspace |
 | `alt+shift+[` / `alt+shift+]` | Move the window to previous/next workspace and follow it |
@@ -97,7 +98,7 @@ Press `alt+;`, then one key. The app opens on its role workspace and the mode ex
 | `z` / `c` / `b` | Zen / Chrome / Brave | `2` / `8` / `8` |
 | `g` / `v` | Ghostty / VS Code | `1` |
 | `a` / `x` | ChatGPT / Codex | `3` |
-| `d` / `w` / `m` | Discord / WhatsApp / Mail | `4` |
+| `d` / `w` / `m` | Discord / WhatsApp / Mail | `4` / `6` / `4` |
 | `s` | Spotify | `5` |
 | `n` | Notes | `7` |
 | `o` | OBS | `o` |

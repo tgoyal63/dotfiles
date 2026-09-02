@@ -18,7 +18,7 @@ default-root-container-orientation = "auto"
 
 on-focus-changed = ["exec-and-forget aerospace move-mouse window-lazy-center || aerospace move-mouse monitor-lazy-center"]
 automatically-unhide-macos-hidden-apps = false
-persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "o"]
+persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "c", "o"]
 on-mode-changed = []
 
 [key-mapping]
@@ -35,8 +35,8 @@ top = 0
 right = 0
 
 # Role map:
-# 1 Dev, 2 Web, 3 AI, 4 Comms, 5 Media, 6 Creation, 7 Notes/Tasks,
-# 8 Work Browser, 9 Dev Utilities, 0 Misc.
+# 1 Dev, 2 Web, 3 AI, 4 Discord/Comms, 5 Media, 6 WhatsApp/Creation, 7 Notes/Tasks,
+# 8 Work Browser, 9 Dev Utilities, 0 Misc, c Discord Canary, o OBS.
 # Workspaces are intentionally not force-pinned to monitors so they can be moved.
 
 [mode.main.binding]
@@ -87,6 +87,7 @@ alt-7 = "workspace 7"
 alt-8 = "workspace 8"
 alt-9 = "workspace 9"
 alt-0 = "workspace 0"
+alt-c = "workspace c"
 alt-o = "workspace o"
 alt-q = "workspace 0"
 
@@ -100,6 +101,7 @@ alt-shift-7 = "move-node-to-workspace 7"
 alt-shift-8 = "move-node-to-workspace 8"
 alt-shift-9 = "move-node-to-workspace 9"
 alt-shift-0 = "move-node-to-workspace 0"
+alt-shift-c = "move-node-to-workspace c"
 alt-shift-o = "move-node-to-workspace o"
 
 alt-backtick = "workspace-back-and-forth"
@@ -153,7 +155,7 @@ v = ["workspace 1", "exec-and-forget open -a 'Visual Studio Code'", "mode main"]
 a = ["workspace 3", "exec-and-forget open -a ChatGPT", "mode main"]
 x = ["workspace 3", "exec-and-forget open -a Codex", "mode main"]
 d = ["workspace 4", "exec-and-forget open -a Discord", "mode main"]
-w = ["workspace 4", "exec-and-forget open -a WhatsApp", "mode main"]
+w = ["workspace 6", "exec-and-forget open -a WhatsApp", "mode main"]
 m = ["workspace 4", "exec-and-forget open -a Mail", "mode main"]
 n = ["workspace 7", "exec-and-forget open -a Notes", "mode main"]
 s = ["workspace 5", "exec-and-forget open -a Spotify", "mode main"]
@@ -197,14 +199,14 @@ run = "move-node-to-workspace 3"
 if.app-id = "com.openai.codex"
 run = "move-node-to-workspace 3"
 
-# 4: Comms
+# 4: Discord / comms
 [[on-window-detected]]
 if.app-id = "com.hnc.Discord"
 run = "move-node-to-workspace 4"
 
 [[on-window-detected]]
-if.app-id = "net.whatsapp.WhatsApp"
-run = "move-node-to-workspace 4"
+if.app-id = "com.hnc.DiscordCanary"
+run = "move-node-to-workspace c"
 
 [[on-window-detected]]
 if.app-id = "ru.keepcoder.Telegram"
@@ -224,7 +226,11 @@ run = "move-node-to-workspace 5"
 if.app-id = "com.obsproject.obs-studio"
 run = "move-node-to-workspace o"
 
-# 6: Creation
+# 6: WhatsApp / creation
+[[on-window-detected]]
+if.app-id = "net.whatsapp.WhatsApp"
+run = "move-node-to-workspace 6"
+
 [[on-window-detected]]
 if.app-name-regex-substring = "audacity"
 run = "move-node-to-workspace 6"

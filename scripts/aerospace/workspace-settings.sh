@@ -6,7 +6,7 @@ WORK_MONITOR="AORUS FI27Q"
 SIDE_MONITOR="Built-in Retina Display"
 
 WORK_MONITOR_WORKSPACES="1 2 3 7 8 9"
-SIDE_MONITOR_WORKSPACES="4 5 6 0 o"
+SIDE_MONITOR_WORKSPACES="4 5 6 0 c o"
 
 APP_ID_WORKSPACE_RULES='com.mitchellh.ghostty|1
 com.microsoft.VSCode|1
@@ -14,7 +14,8 @@ app.zen-browser.zen|2
 com.openai.chat|3
 com.openai.codex|3
 com.hnc.Discord|4
-net.whatsapp.WhatsApp|4
+com.hnc.DiscordCanary|c
+net.whatsapp.WhatsApp|6
 ru.keepcoder.Telegram|4
 com.apple.mail|4
 com.spotify.client|5
@@ -34,6 +35,7 @@ postman|9
 insomnia|9'
 
 SCREEN_SHARE_PRIVATE_APP_IDS='com.hnc.Discord
+com.hnc.DiscordCanary
 net.whatsapp.WhatsApp
 com.spotify.client
 com.obsproject.obs-studio'

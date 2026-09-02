@@ -9,14 +9,15 @@ macOS dotfiles tuned for a fast, strict-tiling, dev-first workflow.
 | `1` | Dev / terminal | Ghostty, VS Code |
 | `2` | Web | Zen Browser |
 | `3` | AI | ChatGPT, Codex |
-| `4` | Comms | Discord, WhatsApp, Telegram, Mail |
+| `4` | Discord / comms | Discord, Telegram, Mail |
 | `5` | Media | Spotify |
-| `6` | Creation | Audacity |
+| `6` | WhatsApp / creation | WhatsApp, Audacity |
 | `7` | Notes / tasks | Obsidian, Notion, Notes, Calendar, Todoist, Things |
 | `8` | Work browser | Chrome, Brave |
 | `9` | Dev utilities | OrbStack, Postman, Insomnia |
 | `0` | Misc | Everything else |
-| `o` | OBS
+| `c` | Discord Canary | Discord Canary |
+| `o` | OBS | OBS Studio |
 
 Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current workspace to another monitor, or `alt+shift+m` to move the focused window to another monitor.
 
