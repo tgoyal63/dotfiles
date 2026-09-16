@@ -59,7 +59,7 @@ export default {
   defaultBrowser: ZEN,
   options: {
     checkForUpdates: true,
-    hideIcon: false,
+    hideIcon: true,
     keepRunning: true,
     logRequests: false
   },
