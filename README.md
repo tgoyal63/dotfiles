@@ -191,9 +191,12 @@ not change its role. `alt+shift+a` reapplies the saved labels and routes every
 open window through the shared bundle-ID table.
 
 With the scripting addition active, `alt+shift+tab` physically moves the native
-Space to the next display, and startup can create missing Spaces automatically.
-The fallback logical swap exists only to make recovery possible if the
-scripting addition disappears during a running session.
+Space to the next display, wrapping from the last display back to the first, and
+startup can create missing Spaces automatically.
+If it is the source display's last user Space, yabai first creates an empty
+placeholder because macOS requires every display to retain one Space.
+If the scripting addition becomes unavailable during a running session, the
+shortcut fails safely instead of swapping another display's active Space.
 
 The scripting-addition step deliberately remains separate because it changes
 system security policy, installs a root-loaded Dock payload, and adds one

@@ -263,6 +263,10 @@ validate_yabai_config() {
     grep -Fq 'for workspace in c 6 4' "$repo_dir/scripts/yabai/bootstrap-spaces.sh" &&
     grep -Fq 'workspace_state_is_complete' "$repo_dir/scripts/yabai/startup.sh" &&
     grep -Fq 'Expected %s labeled workspaces after startup' "$repo_dir/scripts/yabai/startup.sh" &&
+    grep -Fq '% ($displays | length)' "$repo_dir/scripts/yabai/move-space-next-display.sh" &&
+    grep -Fq 'if ! move_error="$("$YABAI_BIN" -m space "$source_label" --display "$target_display"' "$repo_dir/scripts/yabai/move-space-next-display.sh" &&
+    grep -Fq 'no other active Space was moved' "$repo_dir/scripts/yabai/move-space-next-display.sh" &&
+    ! grep -Fq 'yabai-swap-' "$repo_dir/scripts/yabai/move-space-next-display.sh" &&
     grep -Fq '. "$script_dir/lib.sh"' "$repo_dir/scripts/yabai/arrange-workspaces.sh" &&
     grep -Fq '"$yabai_scripts/startup.sh"' "$repo_dir/yabairc" &&
     grep -Fq 'restoring AeroSpace' "$repo_dir/scripts/window-manager/use-yabai.sh" &&

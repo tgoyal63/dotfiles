@@ -4,13 +4,14 @@
 :: launch @
 :: service @
 
-# Media keys.
-previous   : $HOME/.config/aerospace/scripts/spotify/prev.sh
-play       : $HOME/.config/aerospace/scripts/spotify/playpause.sh
-next       : $HOME/.config/aerospace/scripts/spotify/next.sh
-mute       : $HOME/.config/aerospace/scripts/spotify/mute.sh
-sound_down : $HOME/.config/aerospace/scripts/spotify/volumedown.sh
-sound_up   : $HOME/.config/aerospace/scripts/spotify/volumeup.sh
+# Spotify controls on Fn + F7-F12. The unmodified media-key events are left to
+# macOS for system-wide playback and volume control.
+f7         : $HOME/.config/aerospace/scripts/spotify/prev.sh
+f8         : $HOME/.config/aerospace/scripts/spotify/playpause.sh
+f9         : $HOME/.config/aerospace/scripts/spotify/next.sh
+f10        : $HOME/.config/aerospace/scripts/spotify/mute.sh
+f11        : $HOME/.config/aerospace/scripts/spotify/volumedown.sh
+f12        : $HOME/.config/aerospace/scripts/spotify/volumeup.sh
 
 # Focus and move windows using the real macOS display geometry.
 alt - left  : $HOME/.config/yabai/scripts/focus-direction.sh west

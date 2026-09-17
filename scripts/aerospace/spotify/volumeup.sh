@@ -1,2 +1,7 @@
 #!/bin/bash
-osascript -e 'tell application "Spotify" to set sound volume to (sound volume + 20)'
+osascript \
+  -e 'tell application "Spotify"' \
+  -e 'set targetVolume to sound volume + 5' \
+  -e 'if targetVolume > 100 then set targetVolume to 100' \
+  -e 'set sound volume to targetVolume' \
+  -e 'end tell'

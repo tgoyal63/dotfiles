@@ -8,99 +8,57 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source_space="$($YABAI_BIN -m query --spaces --space)"
 source_label="$(printf '%s\n' "$source_space" | jq -r '.label // empty')"
 source_workspace="${source_label#ws-}"
+source_id="$(printf '%s\n' "$source_space" | jq -r '.id')"
+source_display="$(printf '%s\n' "$source_space" | jq -r '.display')"
+target_display="$(
+  "$YABAI_BIN" -m query --displays |
+    jq -r --argjson source "$source_display" '
+      [.[].index] | sort as $displays |
+      if ($displays | length) < 2 then empty
+      else $displays[((($displays | index($source)) + 1) % ($displays | length))]
+      end
+    '
+)"
 
 [[ -n "$source_label" && "$source_label" == ws-* ]] || {
   printf '%s\n' 'The focused native Space is not a managed logical workspace.' >&2
   exit 1
 }
-
-if "$YABAI_BIN" -m space --display next >/dev/null 2>&1; then
-  "$script_dir/focus-space.sh" "$source_workspace"
-  exit 0
-fi
-
-spaces_json="$($YABAI_BIN -m query --spaces)"
-source_index="$(printf '%s\n' "$source_space" | jq -r '.index')"
-source_display="$(printf '%s\n' "$source_space" | jq -r '.display')"
-
-target_display="$(
-  $YABAI_BIN -m query --displays |
-    jq -r --argjson current "$source_display" '
-      [.[].index] | sort as $displays |
-      if ($displays | length) < 2 then empty
-      else $displays[((($displays | index($current)) + 1) % ($displays | length))]
-      end
-    '
-)"
 [[ -n "$target_display" ]] || exit 0
 
-target_space="$(
-  printf '%s\n' "$spaces_json" |
-    jq -c --argjson display "$target_display" '.[] | select(.display == $display and ."is-visible" == true and ."is-native-fullscreen" == false)' |
-    head -n 1
+source_space_count="$(
+  "$YABAI_BIN" -m query --spaces |
+    jq -r --argjson display "$source_display" \
+      '[.[] | select(.display == $display and ."is-native-fullscreen" == false)] | length'
 )"
-[[ -n "$target_space" ]] || { printf 'Display %s has no visible user Space.\n' "$target_display" >&2; exit 1; }
+placeholder_index=""
 
-target_index="$(printf '%s\n' "$target_space" | jq -r '.index')"
-target_label="$(printf '%s\n' "$target_space" | jq -r '.label // empty')"
-target_workspace="${target_label#ws-}"
+# macOS requires every display to retain at least one user Space. Create an
+# empty placeholder before moving the only Space instead of swapping another
+# display's active Space into its place.
+if [[ "$source_space_count" -eq 1 ]]; then
+  if ! "$YABAI_BIN" -m space --create "$source_display"; then
+    printf '%s\n' \
+      'Unable to create a placeholder Space. The yabai scripting addition must be active; nothing was moved.' \
+      >&2
+    exit 1
+  fi
 
-identity_for_space() {
-  printf '%s\n' "$1" | jq -r 'if .uuid == "" then "id:" + (.id | tostring) else "uuid:" + .uuid end'
-}
-
-source_identity="$(identity_for_space "$source_space")"
-target_identity="$(identity_for_space "$target_space")"
-temporary_label="yabai-swap-$$"
-
-source_windows="$(
-  $YABAI_BIN -m query --windows |
-    jq -r --argjson space "$source_index" '.[] | select(.space == $space and ."can-move" == true and ."is-native-fullscreen" == false) | .id'
-)"
-target_windows="$(
-  $YABAI_BIN -m query --windows |
-    jq -r --argjson space "$target_index" '.[] | select(.space == $space and ."can-move" == true and ."is-native-fullscreen" == false) | .id'
-)"
-
-# Swapping labels and window contents emulates moving an AeroSpace workspace
-# without requiring the privileged yabai scripting addition.
-$YABAI_BIN -m space "$source_label" --label "$temporary_label"
-$YABAI_BIN -m space "$target_index" --label "$source_label"
-if [[ -n "$target_label" ]]; then
-  $YABAI_BIN -m space "$temporary_label" --label "$target_label"
-  source_destination="$target_label"
-else
-  source_destination="$temporary_label"
+  placeholder_index="$(
+    "$YABAI_BIN" -m query --spaces |
+      jq -r --argjson display "$source_display" --argjson source_id "$source_id" \
+        '[.[] | select(.display == $display and .id != $source_id and ."is-native-fullscreen" == false)] | last | .index // empty'
+  )"
 fi
 
-while IFS= read -r window_id; do
-  [[ -n "$window_id" ]] || continue
-  $YABAI_BIN -m window "$window_id" --space "$source_label"
-done <<<"$source_windows"
-
-while IFS= read -r window_id; do
-  [[ -n "$window_id" ]] || continue
-  $YABAI_BIN -m window "$window_id" --space "$source_destination"
-done <<<"$target_windows"
-
-if [[ -z "$target_label" ]]; then
-  $YABAI_BIN -m space "$temporary_label" --label ""
+move_error=""
+if ! move_error="$("$YABAI_BIN" -m space "$source_label" --display "$target_display" 2>&1)"; then
+  if [[ -n "$placeholder_index" ]]; then
+    "$YABAI_BIN" -m space "$placeholder_index" --destroy >/dev/null 2>&1 || true
+  fi
+  printf 'Unable to move this Space; no other active Space was moved%s%s\n' \
+    "${move_error:+: }" "$move_error" >&2
+  exit 1
 fi
 
-[[ -f "$YABAI_WORKSPACE_STATE" ]] || { printf '%s\n' 'Workspace state is not initialized.' >&2; exit 1; }
-state_tmp="$(mktemp "$YABAI_STATE_DIR/workspaces.XXXXXX")"
-trap 'rm -f "$state_tmp"' EXIT
-
-awk -F'|' \
-  -v source_workspace="$source_workspace" \
-  -v source_identity="$source_identity" \
-  -v target_workspace="$target_workspace" \
-  -v target_identity="$target_identity" '
-    $1 == source_workspace { print source_workspace "|" target_identity; next }
-    target_workspace != "" && $1 == target_workspace { print target_workspace "|" source_identity; next }
-    { print }
-  ' "$YABAI_WORKSPACE_STATE" >"$state_tmp"
-
-mv "$state_tmp" "$YABAI_WORKSPACE_STATE"
-trap - EXIT
 "$script_dir/focus-space.sh" "$source_workspace"
