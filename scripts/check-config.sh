@@ -247,6 +247,51 @@ validate_workspace_routes() {
   done <<<"$APP_NAME_WORKSPACE_RULES"
 }
 
+validate_yabai_config() {
+  sh -n "$repo_dir/yabairc" || return 1
+
+  grep -Fq 'ad0a12d63f639534a296a1d065b0d04979f1b4db' "$repo_dir/scripts/yabai/install.sh" &&
+    grep -Fq 'b704affba65f732ffd6676c3bb22c94abc737ee73af8bdf29a5ef02650cde33e' "$repo_dir/scripts/yabai/install.sh" ||
+    return 1
+
+  grep -Fq 'link_path "$repo_dir/yabairc" "$HOME/.config/yabai/yabairc"' "$repo_dir/scripts/link-configs.sh" &&
+    grep -Fq 'link_path "$repo_dir/skhdrc" "$HOME/.config/skhd/skhdrc"' "$repo_dir/scripts/link-configs.sh" &&
+    grep -Fq 'link_path "$repo_dir/scripts/yabai" "$HOME/.config/yabai/scripts"' "$repo_dir/scripts/link-configs.sh" &&
+    grep -Fq 'WORKSPACE_ORDER="1 2 3 4 5 6 7 8 9 0 c o"' "$repo_dir/scripts/aerospace/workspace-settings.sh" &&
+    grep -Fq -- '--initialize-messaging' "$repo_dir/scripts/yabai/bootstrap-spaces.sh" &&
+    grep -Fq 'group_by(.display)' "$repo_dir/scripts/yabai/bootstrap-spaces.sh" &&
+    grep -Fq 'for workspace in c 6 4' "$repo_dir/scripts/yabai/bootstrap-spaces.sh" &&
+    grep -Fq 'workspace_state_is_complete' "$repo_dir/scripts/yabai/startup.sh" &&
+    grep -Fq 'Expected %s labeled workspaces after startup' "$repo_dir/scripts/yabai/startup.sh" &&
+    grep -Fq '. "$script_dir/lib.sh"' "$repo_dir/scripts/yabai/arrange-workspaces.sh" &&
+    grep -Fq '"$yabai_scripts/startup.sh"' "$repo_dir/yabairc" &&
+    grep -Fq 'restoring AeroSpace' "$repo_dir/scripts/window-manager/use-yabai.sh" &&
+    grep -Fq 'sudo -n "$YABAI_BIN" --load-sa' "$repo_dir/scripts/window-manager/use-yabai.sh" &&
+    grep -Fq -- '--uninstall-service' "$repo_dir/scripts/window-manager/use-aerospace.sh" &&
+    grep -Fq 'route-new-window' "$repo_dir/scripts/yabai/register-routes.sh" &&
+    grep -Fq 'target_workspace_for_app' "$repo_dir/scripts/yabai/route-window.sh" &&
+    grep -Fq -- '--toggle float' "$repo_dir/scripts/yabai/route-window.sh"
+}
+
+validate_skhd_config() {
+  grep -Fq 'focus-space.sh 4' "$repo_dir/skhdrc" &&
+    grep -Fq 'focus-space.sh 6' "$repo_dir/skhdrc" &&
+    grep -Fq 'focus-space.sh c' "$repo_dir/skhdrc" &&
+    grep -Fq 'focus-relative-space.sh prev' "$repo_dir/skhdrc" &&
+    grep -Fq 'toggle-tiles.sh' "$repo_dir/skhdrc" &&
+    grep -Fq 'restart.sh' "$repo_dir/skhdrc" &&
+    grep -Fq 'move-space-next-display.sh' "$repo_dir/skhdrc" &&
+    grep -Fq 'privacy-screen-share.sh' "$repo_dir/skhdrc"
+}
+
+validate_keyboard_parity() {
+  local python_bin
+
+  python_bin="$(command -v python3.13 2>/dev/null || command -v python3 2>/dev/null || true)"
+  [[ -n "$python_bin" ]] || return 1
+  "$python_bin" "$repo_dir/scripts/yabai/validate-keyboard-parity.py"
+}
+
 validate_documentation() {
   local expected_row='| `3` | AI | ChatGPT, Codex |'
 
@@ -263,7 +308,9 @@ validate_documentation() {
     grep -Fq 'vscode/settings.json' "$repo_dir/README.md" &&
     grep -Fq 'scripts/doctor.sh' "$repo_dir/README.md" &&
     grep -Fq '`project`' "$repo_dir/README.md" &&
-    grep -Fq 'scripts/check-config.sh' "$repo_dir/README.md"
+    grep -Fq 'scripts/check-config.sh' "$repo_dir/README.md" &&
+    grep -Fq 'official yabai SIP guide' "$repo_dir/README.md" &&
+    grep -Fq 'The switch is transactional' "$repo_dir/README.md"
 }
 
 validate_ghostty_terminal_keys() {
@@ -347,6 +394,7 @@ validate_aerospace_startup_apps() {
 
 validate_brewfile() {
   [[ -f "$repo_dir/Brewfile" ]] &&
+    grep -Fq 'brew "asmvik/formulae/skhd"' "$repo_dir/Brewfile" &&
     grep -Fq 'brew "steipete/tap/remindctl"' "$repo_dir/Brewfile" &&
     grep -Fq 'cask "orbstack"' "$repo_dir/Brewfile" &&
     grep -Fq 'cask "kiro-cli"' "$repo_dir/Brewfile" &&
@@ -473,6 +521,9 @@ fi
 run_check 'shell script syntax' validate_script_syntax
 run_check 'shell script executable permissions' validate_script_permissions
 run_check 'workspace routing stays synchronized' validate_workspace_routes
+run_check 'yabai config and pinned installer' validate_yabai_config
+run_check 'skhd shortcut parity' validate_skhd_config
+run_check 'AeroSpace and skhd keyboard parity' validate_keyboard_parity
 run_check 'key documentation stays synchronized' validate_documentation
 run_check 'Ghostty Option key acts as Alt' validate_ghostty_terminal_keys
 run_check 'VS Code settings' validate_vscode_settings

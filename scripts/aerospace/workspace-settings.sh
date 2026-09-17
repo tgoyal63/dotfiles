@@ -2,6 +2,8 @@
 
 # Global Aerospace workspace preferences. Edit this file when your layout changes.
 
+WORKSPACE_ORDER="1 2 3 4 5 6 7 8 9 0 c o"
+
 WORK_MONITOR="AORUS FI27Q"
 SIDE_MONITOR="Built-in Retina Display"
 

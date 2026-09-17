@@ -1,6 +1,7 @@
 # Dotfiles
 
-macOS dotfiles tuned for a fast, strict-tiling, dev-first workflow.
+macOS dotfiles tuned for a fast, strict-tiling, dev-first workflow. yabai is the
+native-Spaces window manager; AeroSpace remains available as a rollback path.
 
 ## Workflow
 
@@ -19,7 +20,7 @@ macOS dotfiles tuned for a fast, strict-tiling, dev-first workflow.
 | `c` | Discord Canary | Discord Canary |
 | `o` | OBS | OBS Studio |
 
-Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current workspace to another monitor, or `alt+shift+m` to move the focused window to another monitor.
+Native Spaces are identified by stable `ws-*` labels instead of display coordinates. Use `alt+shift+tab` to move the current Space to another display, or `alt+shift+m` to move the focused window. Physical display placement can be horizontal, vertical, or irregular.
 
 ## Included
 
@@ -28,6 +29,8 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `.zshrc` | `~/.zshrc` | Small zsh module loader |
 | `zsh/*.zsh` | sourced by `.zshrc` | PATH, tools, prompt, aliases, local overrides |
 | `aerospace.toml` | `~/.config/aerospace/aerospace.toml` | Strict tiling, workspace routing, keybindings |
+| `yabairc` | `~/.config/yabai/yabairc` | Native-Spaces tiling and routing bootstrap |
+| `skhdrc` | `~/.config/skhd/skhdrc` | Global yabai keyboard shortcuts and modes |
 | `ghostty.toml` | `~/.config/ghostty/config` | Ghostty theme and opacity |
 | `starship.toml` | `~/.config/starship.toml` | Prompt layout |
 | `finicky.ts` | `~/.finicky.ts` | Browser routing |
@@ -41,7 +44,9 @@ Workspaces are not pinned to monitors. Use `alt+shift+tab` to move the current w
 | `scripts/doctor.sh` | run with `doctor` | Validate the live macOS development environment |
 | `scripts/workday.sh` | run with `workday` | Summarize tools and repositories needing attention |
 | `scripts/macos/fix-mission-control.sh` | run manually | Mission Control/AeroSpace defaults |
+| `scripts/macos/configure-yabai-spaces.sh` | run manually | Native per-display Spaces defaults for yabai |
 | `scripts/aerospace/workspace-settings.sh` | sourced by helper scripts | Global workspace, monitor, app routing, and privacy settings |
+| `scripts/yabai/` | `~/.config/yabai/scripts/` | Pinned installer, stable Space labels, routing, and window helpers |
 | `SHORTCUTS.md` | opened by `alt+shift+s` | Quick shortcut overview document |
 | `scripts/aerospace/spotify/` | `~/.config/aerospace/scripts/spotify/` | Spotify media key scripts |
 
@@ -63,7 +68,7 @@ scripts/install-brew-apps.sh notes media
 Available groups are `core`, `browsers`, `dev`, `comms`, `notes`, `media`, and `all`.
 
 With no group, the installer uses `brew bundle --no-upgrade` and `Brewfile` as the source of truth. It installs missing entries without broadly upgrading or removing software, and it never runs `brew bundle cleanup`. Selected groups retain the existing idempotent cask adoption behavior.
-The `core` group includes FZF, zoxide, Atuin, Python 3.13, RemindCtl, zsh-autosuggestions, and zsh-syntax-highlighting. The `dev` group includes Kiro CLI. The `notes` group includes Memo and the Obsidian app; Obsidian's official CLI is bundled with the app rather than installed as a separate Homebrew formula.
+The `core` group includes FZF, zoxide, Atuin, Python 3.13, RemindCtl, skhd, zsh-autosuggestions, and zsh-syntax-highlighting. The `dev` group includes Kiro CLI. The `notes` group includes Memo and the Obsidian app; Obsidian's official CLI is bundled with the app rather than installed as a separate Homebrew formula.
 
 Check the baseline without installing or removing anything:
 
@@ -125,9 +130,81 @@ Daily helpers:
 
 `workday` derives up to three suggested priorities from overdue reminders, local changes, unpushed or behind repositories, and GitHub review requests. GitHub data appears after `gh auth login`; CodexBar failures are contained and never stop the report.
 
+## yabai on macOS 27
+
+The repository pins the audited macOS 27 compatibility fork to commit
+`ad0a12d63f639534a296a1d065b0d04979f1b4db`. Its installer also pins the
+verified macOS build and Dock hash, so an OS update cannot silently reuse stale
+scripting-addition offsets.
+
+Prepare the migration:
+
+```bash
+brew install asmvik/formulae/skhd
+scripts/link-configs.sh
+scripts/yabai/install.sh
+scripts/macos/configure-yabai-spaces.sh
+```
+
+Full keyboard parity requires yabai's scripting addition. This weakens parts of
+System Integrity Protection, so keep AeroSpace active until every step is
+complete. Shut down, enter macOS Recovery, open Utilities -> Terminal, and run
+the Apple Silicon macOS 13-or-newer command from the
+[official yabai SIP guide](https://github.com/asmvik/yabai/wiki/Disabling-System-Integrity-Protection):
+
+```bash
+csrutil enable --without fs --without debug --without nvram
+```
+
+After returning to macOS, enable non-Apple-signed arm64e binaries and reboot:
+
+```bash
+sudo nvram boot-args=-arm64e_preview_abi
+sudo reboot
+```
+
+Create a self-signed Code Signing certificate in Keychain Access with the name
+`yabai-cert`, identity type `Self Signed Root`, and certificate type `Code
+Signing`. Then install the scripting addition and perform the guarded switch:
+
+```bash
+scripts/yabai/enable-scripting-addition.sh
+scripts/window-manager/use-yabai.sh
+```
+
+On macOS 26 and 27, an existing enabled `yabai` permission can remain bound to
+an older code hash. If the guarded switch reports that yabai cannot access
+accessibility features, open System Settings -> Privacy & Security -> Device
+Control and Data Access, remove the existing `yabai` row, add
+`/opt/homebrew/bin/yabai`, and enable it. Merely toggling the stale row off and
+on does not update its stored code requirement.
+
+The switch is transactional: yabai waits for all twelve logical workspaces and
+their labels before skhd starts. If startup cannot repair the native Spaces or
+pass the readiness gate, it stops yabai/skhd and restores AeroSpace. The
+three-Space `--initialize-messaging` mode remains available for diagnostics, but
+it is deliberately not accepted as keyboard-parity readiness.
+
+The full mapping is stored by macOS Space UUID under
+`~/.local/state/yabai/workspaces.tsv`. Moving a Space to another display does
+not change its role. `alt+shift+a` reapplies the saved labels and routes every
+open window through the shared bundle-ID table.
+
+With the scripting addition active, `alt+shift+tab` physically moves the native
+Space to the next display, and startup can create missing Spaces automatically.
+The fallback logical swap exists only to make recovery possible if the
+scripting addition disappears during a running session.
+
+The scripting-addition step deliberately remains separate because it changes
+system security policy, installs a root-loaded Dock payload, and adds one
+hash-pinned `sudoers` command. Return to the preserved setup with
+`scripts/window-manager/use-aerospace.sh`.
+
 ## Login Apps
 
-AeroSpace starts only Discord, Ghostty, Zen, and Visual Studio Code. All other applications remain available through `alt+;` and their direct workspace shortcuts.
+The profile switchers ensure only one window manager owns login startup. yabai
+starts only Discord, Ghostty, Zen, and Visual Studio Code; all other applications
+remain available through `alt+;` and their direct workspace shortcuts.
 
 ## VS Code
 
@@ -143,22 +220,25 @@ Run the dependency-free repository checks after making changes:
 scripts/check-config.sh
 ```
 
-The checker validates shell syntax, integration ordering and runtime hooks, workflow helpers, Atuin and VS Code settings, Kiro CLI shell setup and completion, executable permissions, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
+The checker validates shell syntax, integration ordering and runtime hooks, workflow helpers, Atuin and VS Code settings, Kiro CLI shell setup and completion, executable permissions, yabai/skhd migration invariants, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
 
-## Mission Control Fix
+## Mission Control Profiles
 
-AeroSpace works best when macOS Spaces stops fighting it. Apply the defaults fix:
+AeroSpace and yabai need opposite settings for per-display Spaces. For yabai:
+
+```bash
+scripts/macos/configure-yabai-spaces.sh
+```
+
+For the AeroSpace rollback profile:
 
 ```bash
 scripts/macos/fix-mission-control.sh
 ```
 
-This does four things:
-
-- Keeps Mission Control from rearranging Spaces by recent use.
-- Enables `Group windows by application`, which fixes tiny/broken Mission Control previews with AeroSpace.
-- Disables separate Spaces per display for better AeroSpace stability.
-- Stops macOS from switching Spaces automatically when activating apps.
+Both profiles keep Mission Control ordering stable, group windows by application,
+and stop application activation from unexpectedly changing Spaces. The yabai
+profile enables separate Spaces per display; the AeroSpace profile disables it.
 
 Log out and back in after running the script so `Displays have separate Spaces` fully updates.
 
@@ -192,21 +272,19 @@ Log out and back in after running the script so `Displays have separate Spaces` 
 
 ## Workspace Arrangement
 
-Press `alt+shift+a` to manually restore open apps to their role workspaces, then restore the default workspace monitor layout.
+Press `alt+shift+a` to restore saved Space labels and move open apps back to their role Spaces.
 
-Edit `scripts/aerospace/workspace-settings.sh` to change the global workspace layout, app routing, monitor targets, or screen-share private apps used by the helper scripts.
+Edit `scripts/aerospace/workspace-settings.sh` to change the shared workspace order, app routing, or screen-share private apps used by both window managers.
 
-Work display `AORUS FI27Q`: `1`, `2`, `3`, `7`, `8`, `9`.
-
-Side display `Built-in Retina Display`: `4`, `5`, `6`, `0`, `o`.
-
-This does not force-pin workspaces, so you can still move any workspace afterward with `alt+shift+tab`.
+No Space is pinned to a monitor. Arrange the Built-in, DELL, and AORUS displays
+however you want, then move any native Space with `alt+shift+tab` once the
+scripting addition is active.
 
 ## Screen Share Privacy
 
-Focus the monitor you are sharing, then press `alt+shift+p`. AeroSpace moves Discord, WhatsApp, Spotify, and OBS windows from that focused monitor to the other monitor.
+Focus the monitor you are sharing, then press `alt+shift+p`. yabai moves Discord, Discord Canary, WhatsApp, Spotify, and OBS windows from that display to the next display.
 
-This is intentionally manual because macOS does not reliably expose which display is currently being shared to Aerospace.
+This is intentionally manual because macOS does not reliably expose which display is currently being shared to the window manager.
 
 ## Browser Routing
 

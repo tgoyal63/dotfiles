@@ -10,7 +10,7 @@ Usage: scripts/install-brew-apps.sh [group ...]
 
 Groups:
   all       Install the complete Brewfile baseline. This is the default.
-  core      Shell, navigation/history tools, AeroSpace, Ghostty, and Finicky
+  core      Shell, navigation/history tools, AeroSpace, skhd, Ghostty, and Finicky
   browsers  Zen, Chrome, Brave, Firefox
   dev       VS Code, OrbStack, Postman, Insomnia, Kiro CLI
   comms     ChatGPT, Discord, Telegram, WhatsApp
@@ -88,8 +88,9 @@ install_cask() {
 install_core() {
   install_shell_tools
   brew tap nikitabobko/tap
+  brew tap asmvik/formulae
   brew tap steipete/tap
-  install_formulae atuin fnm fzf python@3.13 starship steipete/tap/remindctl zoxide zsh-autosuggestions zsh-syntax-highlighting
+  install_formulae atuin asmvik/formulae/skhd fnm fzf python@3.13 starship steipete/tap/remindctl zoxide zsh-autosuggestions zsh-syntax-highlighting
   install_casks aerospace finicky ghostty
 }
 

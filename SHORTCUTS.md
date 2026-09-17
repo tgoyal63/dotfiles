@@ -76,7 +76,7 @@ Open this overview with `alt+shift+s`.
 | `alt+-` / `alt+=` | Resize by a small step |
 | `alt+shift+e` | Balance window sizes |
 | `alt+f` | Toggle fullscreen |
-| `alt+shift+r` | Reload the AeroSpace config |
+| `alt+shift+r` | Restart yabai and reload skhd |
 
 ## Resize Mode
 
@@ -126,7 +126,7 @@ Press `alt+shift+;`, then one action. The mode exits automatically.
 | `alt+m` | Focus the next monitor |
 | `alt+shift+m` | Move the focused window to the next monitor |
 | `alt+shift+tab` | Move the current workspace to the next monitor |
-| `alt+shift+a` | Restore app routing and workspace monitor layout |
+| `alt+shift+a` | Restore native Space labels and app routing |
 | `alt+shift+p` | Move private apps off the focused monitor before screen sharing |
 
 ## Media Controls
@@ -138,7 +138,7 @@ Press `alt+shift+;`, then one action. The mode exits automatically.
 
 ## Browser Routing
 
-Direct AeroSpace shortcuts open or focus browsers; Finicky routes links opened from other apps.
+Direct skhd/yabai shortcuts open or focus browsers; Finicky routes links opened from other apps.
 
 | Link or modifier | Browser |
 |---|---|
@@ -155,4 +155,4 @@ Finicky also removes common `utm_*`, Google, Meta, Microsoft, and Mailchimp trac
 
 ## Global Settings
 
-Edit `scripts/aerospace/workspace-settings.sh` to change workspace placement, app routing, monitor targets, and screen-share private apps. Edit `finicky.ts` to change browser routing.
+Edit `scripts/aerospace/workspace-settings.sh` to change the shared workspace order, app routing, and screen-share private apps. Edit `finicky.ts` to change browser routing.

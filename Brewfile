@@ -3,12 +3,14 @@
 
 tap "anomalyco/tap"
 tap "antoniorodr/memo"
+tap "asmvik/formulae"
 tap "nikitabobko/tap"
 tap "steipete/tap"
 tap "xdevplatform/tap"
 
 # Shell and language toolchains
 brew "atuin"
+brew "asmvik/formulae/skhd"
 brew "fnm"
 brew "fzf"
 brew "go"
