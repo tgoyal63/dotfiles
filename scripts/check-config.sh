@@ -6,6 +6,13 @@ repo_dir="$(cd -- "$script_dir/.." && pwd -P)"
 checks=0
 failures=0
 skipped=0
+validation_tmp="$(mktemp -d "$repo_dir/.check-config.XXXXXX")" || exit 1
+trap 'rm -rf -- "$validation_tmp"' EXIT
+# Keep validation caches and temporary files inside the repository.
+export TMPDIR="$validation_tmp"
+export XDG_CACHE_HOME="$validation_tmp/cache"
+export STARSHIP_CACHE="$validation_tmp/starship"
+export NODE_DISABLE_COMPILE_CACHE=1
 
 pass() {
   checks=$((checks + 1))
@@ -23,6 +30,7 @@ fail() {
 }
 
 skip() {
+  checks=$((checks + 1))
   skipped=$((skipped + 1))
   printf 'SKIP  %s\n' "$1"
 }
@@ -56,6 +64,15 @@ validate_script_syntax() {
   return "$status"
 }
 
+validate_zsh_syntax() {
+  local file
+  local status=0
+  for file in "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh; do
+    zsh -n "$file" || status=1
+  done
+  return "$status"
+}
+
 validate_script_permissions() {
   local file
   local status=0
@@ -73,14 +90,22 @@ validate_script_permissions() {
 validate_zsh_integration_layout() {
   local starship_count
   local pre_line
+  local grok_fpath_line
   local module_line
+  local module_end_line
+  local devrelay_line
+  local grok_path_line
+  local opencode_line
+  local omz_line
   local autosuggestions_line
   local post_line
-  local completion_line
+  local zle_line
   local highlighting_line
   local fzf_line
   local zoxide_line
   local atuin_line
+  local last_code_line
+  local path_export_count
 
   starship_count="$(grep -hF 'starship init zsh' "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh | wc -l | tr -d '[:space:]')"
   if [[ "$starship_count" != 1 ]]; then
@@ -89,32 +114,74 @@ validate_zsh_integration_layout() {
   fi
 
   pre_line="$(grep -nF 'zshrc.pre.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  grok_fpath_line="$(grep -nFx 'fpath=(~/.grok/completions/zsh $fpath)' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
   module_line="$(grep -nF 'for _zsh_module in' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  module_end_line="$(grep -nFx 'unset _zsh_module _zshrc_source' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  devrelay_line="$(grep -nFx 'export PATH="$HOME/.devrelay/bin:$PATH"' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  grok_path_line="$(grep -nFx 'export PATH="$HOME/.grok/bin:$PATH"' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  opencode_line="$(grep -nFx 'export PATH="$HOME/.opencode/bin:$PATH"' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
+  omz_line="$(grep -nE '^[[:space:]]*source "\$ZSH/oh-my-zsh\.sh"[[:space:]]*$' "$repo_dir/zsh/tools.zsh" | head -n 1 | cut -d: -f1)"
   autosuggestions_line="$(grep -nF 'source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
   post_line="$(grep -nF 'zshrc.post.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
-  completion_line="$(grep -nF 'source <(kiro-cli completion zsh)' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
   highlighting_line="$(grep -nF 'source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' "$repo_dir/.zshrc" | head -n 1 | cut -d: -f1)"
   fzf_line="$(grep -nF 'source <(fzf --zsh)' "$repo_dir/zsh/tools.zsh" | head -n 1 | cut -d: -f1)"
   zoxide_line="$(grep -nF 'eval "$(zoxide init zsh)"' "$repo_dir/zsh/tools.zsh" | head -n 1 | cut -d: -f1)"
   atuin_line="$(grep -nF 'eval "$(atuin init zsh --disable-up-arrow --disable-ai)"' "$repo_dir/zsh/tools.zsh" | head -n 1 | cut -d: -f1)"
+  last_code_line="$(awk 'NF && $0 !~ /^[[:space:]]*#/ { last = NR } END { print last }' "$repo_dir/.zshrc")"
+  path_export_count="$(grep -Ec '^export PATH="\$HOME/\.(devrelay|grok|opencode)/bin:\$PATH"$' "$repo_dir/.zshrc")"
 
-  if [[ -z "$pre_line" || -z "$module_line" || -z "$autosuggestions_line" || -z "$post_line" || -z "$completion_line" || -z "$highlighting_line" || -z "$fzf_line" || -z "$zoxide_line" || -z "$atuin_line" ]]; then
+  if [[ -z "$pre_line" || -z "$grok_fpath_line" || -z "$module_line" || -z "$module_end_line" || -z "$devrelay_line" || -z "$grok_path_line" || -z "$opencode_line" || -z "$omz_line" || -z "$autosuggestions_line" || -z "$highlighting_line" || -z "$post_line" || -z "$fzf_line" || -z "$zoxide_line" || -z "$atuin_line" ]]; then
     printf 'One or more required Zsh integration lines are missing\n' >&2
     return 1
   fi
 
-  if ! ((pre_line < module_line && module_line < autosuggestions_line && autosuggestions_line < completion_line && completion_line < highlighting_line && highlighting_line < post_line)); then
+  if ! ((pre_line < grok_fpath_line && grok_fpath_line < module_line &&
+    module_line < module_end_line && module_end_line < devrelay_line &&
+    devrelay_line < grok_path_line && grok_path_line < opencode_line &&
+    opencode_line < autosuggestions_line && autosuggestions_line < highlighting_line &&
+    highlighting_line < post_line)); then
     printf 'Zsh integrations are not loaded in the required order\n' >&2
     return 1
   fi
 
-  if ! ((fzf_line < zoxide_line && zoxide_line < atuin_line)); then
-    printf 'FZF, zoxide, and Atuin are not loaded in the required order\n' >&2
+  if [[ "$path_export_count" != 3 ]]; then
+    printf 'Expected one PATH prepend each for DevRelay, Grok, and OpenCode\n' >&2
+    return 1
+  fi
+
+  if grep -Eq '^[[:space:]]*[^#]*compinit' "$repo_dir/.zshrc"; then
+    printf 'Oh My Zsh must own completion initialization; remove manual compinit from .zshrc\n' >&2
+    return 1
+  fi
+  if ((post_line != last_code_line)); then
+    printf 'Kiro post integration must be the last executable line\n' >&2
+    return 1
+  fi
+  # Include local completion/ZLE additions in the ordering check.
+  while IFS= read -r zle_line; do
+    if ((zle_line > highlighting_line && zle_line != post_line)); then
+      printf 'Completion/ZLE initialization must precede syntax highlighting (line %s)\n' "$zle_line" >&2
+      return 1
+    fi
+  done < <(grep -nE '^[[:space:]]*[^#]*(source[[:space:]]|eval[[:space:]]|bindkey[[:space:]]|zle[[:space:]]+-[ANF]|(^|[[:space:];&])\.[[:space:]])' "$repo_dir/.zshrc" | cut -d: -f1)
+
+  if ! ((omz_line < fzf_line && fzf_line < zoxide_line && zoxide_line < atuin_line)); then
+    printf 'Oh My Zsh, FZF, zoxide, and Atuin are not loaded in the required order\n' >&2
     return 1
   fi
 
   grep -Fq 'if [[ -r /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]' "$repo_dir/.zshrc" &&
     grep -Fq 'if [[ -r /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]' "$repo_dir/.zshrc"
+}
+
+isolated_atuin_init() {
+  local temp_dir="$1"
+  # Do not inherit live Atuin path overrides or logging destinations.
+  env -i PATH="$PATH" HOME="$temp_dir" TERM=xterm-256color TMPDIR="$temp_dir" \
+    XDG_CONFIG_HOME="$temp_dir/config" XDG_DATA_HOME="$temp_dir/data" \
+    XDG_CACHE_HOME="$temp_dir/cache" ATUIN_HOME="$temp_dir/atuin" \
+    ATUIN_CONFIG_DIR="$temp_dir/config/atuin" \
+    atuin init zsh --disable-up-arrow --disable-ai
 }
 
 validate_shell_navigation_tools() {
@@ -133,8 +200,7 @@ validate_shell_navigation_tools() {
 
   fzf --zsh | zsh -n || result=1
   zoxide init zsh | zsh -n || result=1
-  XDG_CONFIG_HOME="$temp_dir/config" XDG_DATA_HOME="$temp_dir/data" \
-    atuin init zsh --disable-up-arrow --disable-ai | zsh -n || result=1
+  isolated_atuin_init "$temp_dir" | zsh -n || result=1
 
   rm -rf "$temp_dir"
   return "$result"
@@ -156,26 +222,7 @@ validate_zsh_plugin_runtime() {
 }
 
 validate_kiro_shell_integration() {
-  local support_dir="$HOME/Library/Application Support/kiro-cli/shell"
-  local required_path
-  local status=0
-
-  for required_path in \
-    "$HOME/.local/bin/kiro-cli" \
-    "$HOME/.local/bin/kiro-cli-term" \
-    "$support_dir/zshrc.pre.zsh" \
-    "$support_dir/zshrc.post.zsh"; do
-    if [[ ! -e "$required_path" ]]; then
-      printf 'Missing Kiro CLI integration path: %s\n' "$required_path" >&2
-      status=1
-    fi
-  done
-
-  return "$status"
-}
-
-validate_kiro_completion() {
-  kiro-cli completion zsh | zsh -n
+  "$repo_dir/scripts/setup-kiro-cli.sh"
 }
 
 extract_aerospace_routes() {
@@ -329,8 +376,7 @@ validate_atuin_config() {
   mkdir -p "$temp_dir/config/atuin" "$temp_dir/data"
   ln -s "$repo_dir/atuin.toml" "$temp_dir/config/atuin/config.toml"
 
-  XDG_CONFIG_HOME="$temp_dir/config" XDG_DATA_HOME="$temp_dir/data" \
-    atuin init zsh --disable-up-arrow --disable-ai >/dev/null || result=1
+  isolated_atuin_init "$temp_dir" >/dev/null || result=1
 
   rm -rf "$temp_dir"
   return "$result"
@@ -397,14 +443,41 @@ validate_aerospace_startup_apps() {
 }
 
 validate_brewfile() {
+  if grep -Eq '^[[:space:]]*(tap "(anomalyco|xdevplatform)/tap"|brew "(nvm|node@22|anomalyco/tap/opencode)"|cask "(claude-code|xdevplatform/tap/xurl)"|vscode "dodopayments.sentra-code")' "$repo_dir/Brewfile"; then
+    printf 'Brewfile contains a retired installation baseline entry\n' >&2
+    return 1
+  fi
+
   [[ -f "$repo_dir/Brewfile" ]] &&
+    grep -Fqx 'brew "fnm"' "$repo_dir/Brewfile" &&
+    grep -Fqx 'brew "python@3.13"' "$repo_dir/Brewfile" &&
+    grep -Fqx 'brew "opencode"' "$repo_dir/Brewfile" &&
+    grep -Fqx 'brew "libpq", link: true' "$repo_dir/Brewfile" &&
+    grep -Fqx 'brew "libpq@16"' "$repo_dir/Brewfile" &&
+    grep -Fqx 'cask "claude-code@latest"' "$repo_dir/Brewfile" &&
     grep -Fq 'brew "asmvik/formulae/skhd"' "$repo_dir/Brewfile" &&
     grep -Fq 'brew "steipete/tap/remindctl"' "$repo_dir/Brewfile" &&
     grep -Fq 'cask "orbstack"' "$repo_dir/Brewfile" &&
     grep -Fq 'cask "kiro-cli"' "$repo_dir/Brewfile" &&
     grep -Fq 'vscode "openai.chatgpt"' "$repo_dir/Brewfile" &&
     grep -Fq 'brew bundle install --no-upgrade --file "$repo_dir/Brewfile"' "$repo_dir/scripts/install-brew-apps.sh" &&
-    ruby -c "$repo_dir/Brewfile" >/dev/null
+    ruby -c "$repo_dir/Brewfile" >/dev/null || return 1
+
+  # Groups follow the baseline, with the retained opt-in Things exception.
+  ruby - "$repo_dir/Brewfile" "$repo_dir/scripts/install-brew-apps.sh" <<'RUBY'
+baseline = File.read(ARGV[0])
+installer = File.read(ARGV[1])
+missing = []
+optional = ["cask thingsmac"]
+installer.scan(/^  install_(formulae|casks) (.+)$/).each do |kind, entries|
+  directive = kind == "formulae" ? "brew" : "cask"
+  declared = baseline.scan(/^#{directive} "([^"]+)"/).flatten
+  entries.split.each do |entry|
+    missing << "#{directive} #{entry}" unless declared.include?(entry) || optional.include?("#{directive} #{entry}")
+  end
+end
+abort "Installer entries missing from Brewfile: #{missing.join(', ')}" unless missing.empty?
+RUBY
 }
 
 validate_finicky_config() {
@@ -436,19 +509,23 @@ validate_finicky_config() {
       throw new Error("Finicky config has an invalid default browser or handlers list");
     }
 
-    if (!Array.isArray(config.rewrite)) {
+    if (!Array.isArray(config.rewrite) || config.rewrite.length === 0) {
       throw new Error("Finicky config has an invalid rewrite list");
     }
 
     for (const rule of config.rewrite) {
-      const testUrl = new URL("https://example.com/page?utm_source=test&keep=yes");
+      const originalUrl = "https://example.com/page?utm_source=test&utm_medium=email&dclid=a&fbclid=b&gclid=c&mc_cid=d&mc_eid=e&msclkid=f&keep=yes#section";
+      const testUrl = new URL(originalUrl);
 
-      if (typeof rule.match === "function" && rule.match(testUrl, { opener: null })) {
-        const rewrittenUrl = rule.url(testUrl, { opener: null });
-
-        if (rewrittenUrl.searchParams.has("utm_source") || rewrittenUrl.searchParams.get("keep") !== "yes") {
-          throw new Error("Finicky tracking rewrite removed the wrong parameters");
-        }
+      if (typeof rule.match !== "function" || !rule.match(testUrl, { opener: null }) || typeof rule.url !== "function") {
+        throw new Error("Finicky tracking rewrite did not match an HTTPS URL");
+      }
+      const rewrittenUrl = rule.url(testUrl, { opener: null });
+      if (rewrittenUrl.href !== "https://example.com/page?keep=yes#section" || testUrl.href !== originalUrl) {
+        throw new Error("Finicky tracking rewrite removed the wrong parameters");
+      }
+      if (!rule.match(new URL("http://example.com"), { opener: null }) || rule.match(new URL("mailto:person@example.com"), { opener: null })) {
+        throw new Error("Finicky tracking rewrite matched the wrong URL protocols");
       }
     }
 
@@ -478,7 +555,11 @@ validate_finicky_config() {
     const routingCases = [
       ["https://github.com", {}, "Zen"],
       ["https://meet.google.com/example", {}, "Google Chrome"],
+      ["https://docs.google.com/document", {}, "Google Chrome"],
       ["https://music.youtube.com", {}, "Brave Browser"],
+      ["https://youtu.be/example", {}, "Brave Browser"],
+      ["https://www.twitch.tv/example", {}, "Brave Browser"],
+      ["https://youtube.com.example.org", {}, "Zen"],
       ["https://github.com", { option: true }, "Google Chrome"],
       ["https://github.com", { shift: true }, "Brave Browser"],
       ["https://youtube.com", { control: true }, "Zen"],
@@ -494,7 +575,7 @@ validate_finicky_config() {
   ' "$repo_dir/finicky.ts"
 }
 
-run_check 'zsh syntax' zsh -n "$repo_dir/.zshrc" "$repo_dir"/zsh/*.zsh
+run_check 'zsh syntax (entrypoint and every module)' validate_zsh_syntax
 run_check 'zsh integration ordering' validate_zsh_integration_layout
 run_check 'shell workflow helpers' validate_workflow_helpers
 run_check 'AeroSpace startup apps' validate_aerospace_startup_apps
@@ -516,10 +597,8 @@ fi
 
 if command -v kiro-cli >/dev/null 2>&1; then
   run_check 'Kiro CLI shell integration' validate_kiro_shell_integration
-  run_check 'Kiro CLI completion' validate_kiro_completion
 else
   skip 'Kiro CLI shell integration (Kiro CLI is unavailable)'
-  skip 'Kiro CLI completion (Kiro CLI is unavailable)'
 fi
 
 run_check 'shell script syntax' validate_script_syntax
@@ -546,11 +625,9 @@ else
   pass 'ignored files are not present and tracked'
 fi
 
-if command -v node >/dev/null 2>&1 && node --help 2>&1 | grep -q -- '--experimental-strip-types'; then
-  run_check 'Finicky TypeScript syntax' node --experimental-strip-types --check "$repo_dir/finicky.ts"
-  run_check 'Finicky routing and rewrites' validate_finicky_config
+if command -v node >/dev/null 2>&1 && node --experimental-strip-types -e '' >/dev/null 2>&1; then
+  run_check 'Finicky TypeScript import, routing and rewrites' validate_finicky_config
 else
-  skip 'Finicky TypeScript syntax (this Node version cannot check TypeScript)'
   skip 'Finicky routing and rewrites (this Node version cannot load TypeScript)'
 fi
 
@@ -572,19 +649,15 @@ else
 fi
 
 if command -v aerospace >/dev/null 2>&1; then
-  active_aerospace_config="$(aerospace config --config-path 2>/dev/null || true)"
-
-  if [[ -L "$active_aerospace_config" ]]; then
-    active_aerospace_config="$(readlink "$active_aerospace_config")"
-  fi
+  active_aerospace_config="$(readlink "${XDG_CONFIG_HOME:-$HOME/.config}/aerospace/aerospace.toml" 2>/dev/null || true)"
 
   if [[ "$active_aerospace_config" == "$repo_dir/aerospace.toml" ]]; then
-    run_check 'AeroSpace config reload' aerospace reload-config --warnings-as-errors
+    run_check 'AeroSpace native config validation (dry run)' aerospace reload-config --dry-run --no-gui --warnings-as-errors
   else
-    skip 'AeroSpace config reload (this repo is not the active config)'
+    skip 'AeroSpace native config validation (yabai or another profile is selected; TOML and keyboard parity checked above)'
   fi
 else
-  skip 'AeroSpace config reload (AeroSpace is unavailable)'
+  skip 'AeroSpace native config validation (AeroSpace is unavailable; TOML and keyboard parity checked above)'
 fi
 
 printf '\n%d checks, %d failure(s), %d skipped.\n' "$checks" "$failures" "$skipped"

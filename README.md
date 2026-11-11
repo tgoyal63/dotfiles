@@ -39,7 +39,7 @@ Native Spaces are identified by stable `ws-*` labels instead of display coordina
 | `Brewfile` | used by Homebrew Bundle | Reproducible formula, cask, tap, and VS Code extension baseline |
 | `scripts/install-brew-apps.sh` | run manually | Grouped Homebrew installer |
 | `scripts/link-configs.sh` | run manually | Safely create or refresh config symlinks |
-| `scripts/setup-kiro-cli.sh` | run manually | Install Kiro CLI's Zsh terminal integration |
+| `scripts/setup-kiro-cli.sh` | run manually | Check Kiro CLI's existing Zsh compatibility hooks |
 | `scripts/check-config.sh` | run manually | Validate shell and application configs |
 | `scripts/doctor.sh` | run with `doctor` | Validate the live macOS development environment |
 | `scripts/workday.sh` | run with `workday` | Summarize tools and repositories needing attention |
@@ -68,15 +68,18 @@ scripts/install-brew-apps.sh notes media
 Available groups are `core`, `browsers`, `dev`, `comms`, `notes`, `media`, and `all`.
 
 With no group, the installer uses `brew bundle --no-upgrade` and `Brewfile` as the source of truth. It installs missing entries without broadly upgrading or removing software, and it never runs `brew bundle cleanup`. Selected groups retain the existing idempotent cask adoption behavior.
-The `core` group includes FZF, zoxide, Atuin, Python 3.13, RemindCtl, skhd, zsh-autosuggestions, and zsh-syntax-highlighting. The `dev` group includes Kiro CLI. The `notes` group includes Memo and the Obsidian app; Obsidian's official CLI is bundled with the app rather than installed as a separate Homebrew formula.
+The `core` group includes fnm, FZF, zoxide, Atuin, Python 3.13, RemindCtl, skhd, zsh-autosuggestions, and zsh-syntax-highlighting. The `dev` group includes Kiro CLI, `claude-code@latest`, Homebrew core `opencode`, and both `libpq` and `libpq@16`. The `notes` group includes Memo and the Obsidian app; Obsidian's official CLI is bundled with the app rather than installed as a separate Homebrew formula. Selected groups follow the Brewfile, with the existing optional `thingsmac` install retained in `notes`; Things is not part of the currently installed baseline. Use `all` for the complete Brewfile baseline, including VS Code extensions.
+
+Node is managed by fnm, which switches versions using project `.node-version` and `.nvmrc` files. The baseline does not install nvm or Homebrew Node; it leaves project versions alone. Python 3.13 is an explicit dependency, and can coexist with the current Python 3.15 default. Codex uses the official standalone installation; no npm or Homebrew Codex installation is added here. The existing standalone OpenCode in `~/.opencode/bin` takes PATH precedence over Homebrew OpenCode; both installations are retained.
 
 Check the baseline without installing or removing anything:
 
 ```bash
-brew bundle check --no-upgrade --file Brewfile
+HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --no-upgrade --file "$PWD/Brewfile"
 ```
 
 The Brewfile records the Homebrew-managed baseline, including the applications whose consolidation has been deferred. It intentionally excludes software without a valid Homebrew receipt.
+The unused xurl tap/cask and absent Sentra Code extension are excluded. Saved Sentra command permissions remain in VS Code settings as existing user configuration. Homebrew's third-party cmux Ruby DSL deprecation and libtiff/webp circular metadata warnings are external diagnostics; they do not establish a repository config failure and are not repaired by these scripts.
 
 ## Link Configs
 
@@ -88,18 +91,19 @@ scripts/link-configs.sh
 ```
 
 The linker refreshes symlinks but refuses to overwrite regular files or directories. This includes VS Code and Atuin, so back up an existing user config before the first link. The `.zshrc` resolves the repo path automatically when symlinked. Put machine-specific shell settings in `zsh/local.zsh`; start from `zsh/local.zsh.example`.
+When the AeroSpace config link selects `aerospace.yabai-disabled.toml`, the linker preserves that yabai profile. Use the explicit window-manager switch scripts to change modes; linking configs does not switch an existing yabai profile back to AeroSpace.
 
 ## Set Up Kiro CLI
 
-After installing the `dev` group and linking the configs, install Kiro CLI's Zsh integration:
+After installing the `dev` group and linking the configs, check Kiro CLI's existing Zsh integration:
 
 ```bash
 scripts/setup-kiro-cli.sh
 ```
 
-The setup script safely exposes Kiro CLI and its terminal helper under `~/.local/bin`, then installs Kiro's generated pre/post shell integration. Standard `kiro-cli` tab completion is loaded by `.zshrc`.
+Kiro CLI 3.2.0 retains `init zsh pre/post --rcfile zshrc` as compatibility calls for surviving shell hooks. The script validates the existing pre/post files, checks the executable they reference, and syntax-checks generated init output without evaluating it. Missing legacy hook files are reported as optional on a new Mac. Existing hooks and executable links are preserved; setup does not create or replace them.
 
-Kiro inline AI suggestions remain opt-in. Keep them disabled while using zsh-autosuggestions unless you intentionally want Kiro to replace the local history-based suggestion provider.
+The CLI no longer supports the old dotfiles integration installer or completion subcommand. Its supported `integrations install` target is the optional `kiro-command-router`; setup reports its status and never installs it. No desktop app or terminal helper is required. The init compatibility calls do not restore legacy autocomplete or inline AI suggestions. A leftover broken helper link outside the repo can be inspected separately; none of these scripts recreate or remove it.
 
 ## Shell Productivity
 
@@ -211,19 +215,25 @@ remain available through `alt+;` and their direct workspace shortcuts.
 
 ## VS Code
 
-The managed settings keep only core settings and configuration for installed extensions. They remove revoked credential fields, obsolete AI-extension settings, Windows/WSL paths, old terminal-session variables, and missing themes. The integrated terminal treats Option as Meta, uses Zsh, and opens external terminals in Ghostty.
+The managed settings keep core settings, extension configuration, and retained Sentra command permissions. They remove revoked credential fields, obsolete AI-extension settings, Windows/WSL paths, old terminal-session variables, and missing themes. The integrated terminal treats Option as Meta, uses Zsh, and opens external terminals in Ghostty.
 
 Never store API keys or tokens in `vscode/settings.json`. Use environment variables or a system keychain instead.
 
 ## Validate Configs
 
-Run the dependency-free repository checks after making changes:
+Run the repository checks with the installed tools after making changes:
 
 ```bash
 scripts/check-config.sh
 ```
 
-The checker validates shell syntax, integration ordering and runtime hooks, workflow helpers, Atuin and VS Code settings, Kiro CLI shell setup and completion, executable permissions, yabai/skhd migration invariants, Finicky syntax when Node is available, and installed AeroSpace, Ghostty, and Starship configs. AeroSpace is reloaded only when its active config points to this repo.
+The checker validates every shell module's syntax, integration ordering and runtime hooks, workflow helpers, Atuin and VS Code settings, Kiro CLI compatibility hooks, executable permissions, Brewfile/group consistency, yabai/skhd migration invariants, and installed Ghostty and Starship configs. Finicky is dynamically imported with Node type stripping and exercised against routing and URL rewrite cases; this checks supported TypeScript syntax and behavior, not static types. No extra TypeScript dependency is installed.
+
+AeroSpace TOML parsing and keyboard parity are checked in both modes. Its native parser is used only in dry-run mode when the config link selects this repo's AeroSpace profile; it is skipped while the yabai profile is selected. Validation never reloads or switches the live window manager. Temporary validation files and caches are confined to the repo and removed on exit.
+
+Run `doctor` (or `scripts/doctor.sh`) for live commands, apps, links, Kiro, Docker/OrbStack, GitHub CLI, Atuin history, the installed Brewfile baseline, and credential-shaped value scanning. Atuin history is counted from a private temporary snapshot of its database and WAL inside the repo, then the snapshot is removed. This avoids the CLI's permission adjustments and SQLite writes to live sidecars; commands are never printed. A concurrent history change reports an unavailable count instead of trusting an inconsistent snapshot. Standard XDG paths, the newer `ATUIN_HOME/data` layout, config overrides, and `ATUIN_DB_PATH` are supported. Custom `data_dir` without an explicit database path, database URIs, and complex shell-style path expansions require manual inspection. See [Atuin's configuration reference](https://docs.atuin.sh/main/configuration/config/) for path options.
+
+The AeroSpace link identifies the selected window-manager profile; in yabai mode the disabled config must parse and set `start-at-login = false`, and the yabai/skhd links are checked. This validates the selected profile, not daemon health or permissions. Doctor preserves nested validator details, reports its own totals separately, and diagnoses without installing or repairing anything. Missing tools and malformed configs fail; stopped services, authentication, and bundle diagnostics are warnings. Tool checks skipped because a dependency is unavailable are explicitly counted by the config validator.
 
 ## Mission Control Profiles
 

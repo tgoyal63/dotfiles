@@ -12,9 +12,9 @@ Groups:
   all       Install the complete Brewfile baseline. This is the default.
   core      Shell, navigation/history tools, AeroSpace, skhd, Ghostty, and Finicky
   browsers  Zen, Chrome, Brave, Firefox
-  dev       VS Code, OrbStack, Postman, Insomnia, Kiro CLI
+  dev       VS Code, OrbStack, Postman, Insomnia, Kiro CLI, Claude Code, OpenCode, libpq
   comms     ChatGPT, Discord, Telegram, WhatsApp
-  notes     Obsidian, Notion, Todoist, Things, and Memo
+  notes     Obsidian, Notion, Todoist, Things (optional), and Memo
   media     Spotify, OBS, Audacity, LocalSend
 
 Examples:
@@ -91,15 +91,16 @@ install_core() {
   brew tap asmvik/formulae
   brew tap steipete/tap
   install_formulae atuin asmvik/formulae/skhd fnm fzf python@3.13 starship steipete/tap/remindctl zoxide zsh-autosuggestions zsh-syntax-highlighting
-  install_casks aerospace finicky ghostty
+  install_casks nikitabobko/tap/aerospace finicky ghostty
 }
 
 install_browsers() {
-  install_casks brave-browser firefox google-chrome zen-browser
+  install_casks brave-browser firefox google-chrome zen
 }
 
 install_dev() {
-  install_casks visual-studio-code orbstack postman insomnia kiro-cli
+  install_formulae opencode libpq libpq@16
+  install_casks visual-studio-code orbstack postman insomnia kiro-cli claude-code@latest
 }
 
 install_comms() {
@@ -108,7 +109,8 @@ install_comms() {
 
 install_notes() {
   brew tap antoniorodr/memo
-  install_formulae memo
+  install_formulae antoniorodr/memo/memo
+  # Keep the existing opt-in Things route; it is not in the installed baseline.
   install_casks obsidian notion todoist-app thingsmac
 }
 

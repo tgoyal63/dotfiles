@@ -1,12 +1,10 @@
 # Reproducible Homebrew baseline for this Mac.
 # Install/check with scripts/install-brew-apps.sh and brew bundle check --file Brewfile.
 
-tap "anomalyco/tap"
 tap "antoniorodr/memo"
 tap "asmvik/formulae"
 tap "nikitabobko/tap"
 tap "steipete/tap"
-tap "xdevplatform/tap"
 
 # Shell and language toolchains
 brew "atuin"
@@ -14,8 +12,6 @@ brew "asmvik/formulae/skhd"
 brew "fnm"
 brew "fzf"
 brew "go"
-brew "node@22"
-brew "nvm"
 brew "openjdk@17"
 brew "python@3.13"
 brew "starship"
@@ -26,12 +22,13 @@ brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
 
 # Development and automation tools
-brew "anomalyco/tap/opencode", trusted: true
+brew "opencode"
 brew "antoniorodr/memo/memo", trusted: true
 brew "gh"
 brew "gitleaks"
 brew "kata"
 brew "libpq", link: true
+brew "libpq@16"
 brew "nats"
 brew "openai-whisper"
 brew "steipete/tap/codexbar", trusted: true
@@ -58,7 +55,7 @@ cask "zen"
 # Development applications
 cask "android-commandlinetools"
 cask "android-platform-tools"
-cask "claude-code"
+cask "claude-code@latest"
 cask "insomnia"
 cask "kiro-cli"
 cask "ngrok"
@@ -66,7 +63,6 @@ cask "orbstack"
 cask "postman"
 cask "temurin"
 cask "visual-studio-code"
-cask "xdevplatform/tap/xurl", trusted: true
 
 # Communication, notes, and media. App consolidation is intentionally deferred.
 cask "chatgpt"
@@ -87,7 +83,6 @@ vscode "bradlc.vscode-tailwindcss"
 vscode "christian-kohler.npm-intellisense"
 vscode "dart-code.dart-code"
 vscode "dbaeumer.vscode-eslint"
-vscode "dodopayments.sentra-code"
 vscode "eamodio.gitlens"
 vscode "esbenp.prettier-vscode"
 vscode "github.vscode-github-actions"

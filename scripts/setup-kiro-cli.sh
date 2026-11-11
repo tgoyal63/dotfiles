@@ -1,59 +1,52 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-kiro_cli_path=''
-for candidate in /opt/homebrew/bin/kiro-cli /usr/local/bin/kiro-cli; do
-  if [[ -x "$candidate" ]]; then
-    kiro_cli_path="$candidate"
-    break
-  fi
-done
-
-if [[ -z "$kiro_cli_path" ]]; then
-  kiro_cli_path="$(command -v kiro-cli 2>/dev/null || true)"
-fi
+# Kiro 3.2 retains init for existing hooks, but no longer provides the old
+# dotfiles installer. This script checks compatibility without changing files.
+kiro_cli_path="$(command -v kiro-cli 2>/dev/null || true)"
 
 if [[ -z "$kiro_cli_path" || ! -x "$kiro_cli_path" ]]; then
   printf 'Kiro CLI is unavailable. Install the dev app group first.\n' >&2
   exit 1
 fi
 
-kiro_term_path='/Applications/Kiro CLI.app/Contents/MacOS/kiro-cli-term'
-if [[ ! -x "$kiro_term_path" ]]; then
-  printf 'Kiro CLI terminal helper is unavailable: %s\n' "$kiro_term_path" >&2
+if ! "$kiro_cli_path" init --help >/dev/null 2>&1; then
+  printf 'This Kiro CLI does not expose init. Existing shell files were left untouched.\n' >&2
   exit 1
 fi
 
-local_bin="$HOME/.local/bin"
-mkdir -p -- "$local_bin"
-
-link_binary() {
-  local source_path="$1"
-  local target_path="$2"
-  local current_target
-
-  if [[ -L "$target_path" ]]; then
-    current_target="$(readlink "$target_path")"
-    if [[ "$current_target" == "$source_path" ]]; then
-      printf 'OK       %s -> %s\n' "$target_path" "$source_path"
-      return
+support_dir="$HOME/Library/Application Support/kiro-cli/shell"
+for phase in pre post; do
+  hook="$support_dir/zshrc.$phase.zsh"
+  if [[ -e "$hook" || -L "$hook" ]]; then
+    if [[ ! -f "$hook" || ! -r "$hook" ]]; then
+      printf 'Unreadable Kiro shell hook: %s\n' "$hook" >&2
+      exit 1
     fi
-
-    printf 'Refusing to replace existing symlink: %s -> %s\n' "$target_path" "$current_target" >&2
-    exit 1
+    zsh -n "$hook"
+    if grep -Fq '~/.local/bin/kiro-cli' "$hook" && [[ ! -x "$HOME/.local/bin/kiro-cli" ]]; then
+      printf 'Existing Kiro hook references an unavailable executable: %s/.local/bin/kiro-cli\n' "$HOME" >&2
+      exit 1
+    fi
+    printf 'OK       existing %s hook syntax\n' "$phase"
+  else
+    printf 'INFO     no legacy %s hook; Kiro 3.2 does not install these files\n' "$phase"
   fi
 
-  if [[ -e "$target_path" ]]; then
-    printf 'Refusing to replace existing path: %s\n' "$target_path" >&2
+  if ! init_output="$("$kiro_cli_path" init zsh "$phase" --rcfile zshrc)"; then
+    printf 'Kiro CLI init failed for %s; existing shell files were left untouched.\n' "$phase" >&2
     exit 1
   fi
+  # Parse generated shell code; do not evaluate it or touch the live shell.
+  printf '%s\n' "$init_output" | zsh -n
+  printf 'OK       Kiro CLI init zsh %s\n' "$phase"
+done
 
-  ln -s -- "$source_path" "$target_path"
-  printf 'LINKED   %s -> %s\n' "$target_path" "$source_path"
-}
+if router_status="$("$kiro_cli_path" integrations status kiro-command-router 2>&1)"; then
+  printf 'INFO     optional command router: %s\n' "$router_status"
+else
+  printf 'INFO     optional command router status unavailable: %s\n' "$router_status"
+fi
 
-link_binary "$kiro_cli_path" "$local_bin/kiro-cli"
-link_binary "$kiro_term_path" "$local_bin/kiro-cli-term"
-
-"$local_bin/kiro-cli" integrations install dotfiles zsh
-printf '\nKiro CLI Zsh integration is ready. Restart the terminal to activate it.\n'
+printf '\nCompatibility check only; no files, links, or integrations were installed.\n'
+printf 'Legacy autocomplete is not provided by these init compatibility calls.\n'

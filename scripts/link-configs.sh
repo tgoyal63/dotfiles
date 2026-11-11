@@ -103,7 +103,19 @@ link_path() {
 }
 
 link_path "$repo_dir/.zshrc" "$HOME/.zshrc"
-link_path "$repo_dir/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
+aerospace_config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/aerospace"
+aerospace_active_config="$aerospace_config_dir/aerospace.toml"
+aerospace_disabled_config="$aerospace_config_dir/aerospace.yabai-disabled.toml"
+if [[ -L "$aerospace_active_config" && "$(readlink "$aerospace_active_config")" == "$aerospace_disabled_config" ]]; then
+  if [[ -f "$aerospace_disabled_config" ]]; then
+    printf 'KEEP     %s (yabai profile)\n' "$aerospace_active_config"
+  else
+    printf 'Broken yabai profile: %s\n' "$aerospace_active_config" >&2
+    failures=$((failures + 1))
+  fi
+else
+  link_path "$repo_dir/aerospace.toml" "$aerospace_active_config"
+fi
 link_path "$repo_dir/atuin.toml" "$HOME/.config/atuin/config.toml"
 link_path "$repo_dir/ghostty.toml" "$HOME/.config/ghostty/config"
 link_path "$repo_dir/starship.toml" "$HOME/.config/starship.toml"

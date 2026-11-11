@@ -10,6 +10,11 @@ if [[ ! -d "$DOTFILES_DIR/zsh" && -d "$HOME/dotfiles/zsh" ]]; then
   export DOTFILES_DIR="$HOME/dotfiles"
 fi
 
+alias claude-code='claude'
+
+# Register Grok completions before the modular Oh My Zsh initialization.
+fpath=(~/.grok/completions/zsh $fpath)
+
 for _zsh_module in path tools prompt aliases workflows local; do
   if [[ -r "$DOTFILES_DIR/zsh/${_zsh_module}.zsh" ]]; then
     source "$DOTFILES_DIR/zsh/${_zsh_module}.zsh"
@@ -18,12 +23,18 @@ done
 
 unset _zsh_module _zshrc_source
 
+# Added by DevRelay installer
+export PATH="$HOME/.devrelay/bin:$PATH"
+
+# >>> grok installer >>>
+export PATH="$HOME/.grok/bin:$PATH"
+# <<< grok installer <<<
+
+# Move standalone OpenCode first; the modular PATH is unique, so no duplicate remains.
+export PATH="$HOME/.opencode/bin:$PATH"
+
 if [[ -r /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
   source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-fi
-
-if command -v kiro-cli >/dev/null 2>&1 && (( ${+functions[compdef]} )); then
-  source <(kiro-cli completion zsh)
 fi
 
 # Keep zsh-syntax-highlighting after every other in-shell ZLE integration.
