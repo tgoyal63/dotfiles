@@ -297,8 +297,9 @@ validate_workspace_routes() {
 validate_yabai_config() {
   sh -n "$repo_dir/yabairc" || return 1
 
-  grep -Fq 'ad0a12d63f639534a296a1d065b0d04979f1b4db' "$repo_dir/scripts/yabai/install.sh" &&
-    grep -Fq 'b704affba65f732ffd6676c3bb22c94abc737ee73af8bdf29a5ef02650cde33e' "$repo_dir/scripts/yabai/install.sh" ||
+  grep -Fq 'ad8d5adfdc39c76399599ae79a264f2525f6ca5e' "$repo_dir/scripts/yabai/install.sh" &&
+    grep -Fq 'EXPECTED_MACOS_BUILD="26B131"' "$repo_dir/scripts/yabai/install.sh" &&
+    grep -Fq '522c82e356484f3efca80f08b9720ba074a7ec8e6c06e4cf64426182032b7ece' "$repo_dir/scripts/yabai/install.sh" ||
     return 1
 
   grep -Fq 'link_path "$repo_dir/yabairc" "$HOME/.config/yabai/yabairc"' "$repo_dir/scripts/link-configs.sh" &&

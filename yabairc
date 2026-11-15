@@ -26,13 +26,17 @@ yabai -m config                                 \
 
 yabai_scripts="${XDG_CONFIG_HOME:-$HOME/.config}/yabai/scripts"
 
-if [ -d /Library/ScriptingAdditions/yabai.osax ] && sudo -n /opt/homebrew/bin/yabai --load-sa >/dev/null 2>&1; then
+# Register recovery even if the initial load fails or replaces the payload and
+# restarts Dock. Successful recovery must also leave the fallback animation path.
+yabai -m signal --add \
+  label=reload-scripting-addition \
+  event=dock_did_restart \
+  action="sudo -n /opt/homebrew/bin/yabai --load-sa && /opt/homebrew/bin/yabai -m config skip_window_focus_animation off"
+
+if [ -d /Library/ScriptingAdditions/yabai.osax ] && sudo -n /opt/homebrew/bin/yabai --load-sa; then
   yabai -m config skip_window_focus_animation off
-  yabai -m signal --add \
-    label=reload-scripting-addition \
-    event=dock_did_restart \
-    action="sudo -n /opt/homebrew/bin/yabai --load-sa"
 else
+  printf '%s\n' 'yabai: scripting addition unavailable; native Space switching may be slow.' >&2
   yabai -m config skip_window_focus_animation on
 fi
 

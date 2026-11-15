@@ -137,9 +137,10 @@ Daily helpers:
 ## yabai on macOS 27
 
 The repository pins the audited macOS 27 compatibility fork to commit
-`ad0a12d63f639534a296a1d065b0d04979f1b4db`. Its installer also pins the
-verified macOS build and Dock hash, so an OS update cannot silently reuse stale
-scripting-addition offsets.
+`ad8d5adfdc39c76399599ae79a264f2525f6ca5e` for macOS 27.2.1 (`26B131`). Its
+installer also pins the verified Dock hash, so an OS update cannot silently reuse
+stale scripting-addition offsets. The required signatures resolve on both
+`arm64e` slices of this Dock; live behavior still needs checking after installation.
 
 Prepare the migration:
 
@@ -193,6 +194,26 @@ The full mapping is stored by macOS Space UUID under
 `~/.local/state/yabai/workspaces.tsv`. Moving a Space to another display does
 not change its role. `alt+shift+a` reapplies the saved labels and routes every
 open window through the shared bundle-ID table.
+
+After a macOS update, repeated `Unable to focus logical workspace` and `Space
+focus queue` timeouts in `/tmp/skhd_$USER.err.log` can mean the installed
+scripting addition is incompatible. Check the installer pins against the new
+build before reinstalling. Preserve the existing signing identity when updating
+an already configured machine:
+
+```bash
+YABAI_CERT=yabai-cert scripts/yabai/install.sh
+scripts/yabai/enable-scripting-addition.sh
+scripts/yabai/restart.sh
+```
+
+The enable step needs an administrator password to refresh the signed binary's
+hash in the existing sudoers rule. Replacing the on-disk payload can restart Dock;
+the subsequent service restart loads it again. Check that workspace switching
+actually completes, because the first load can report success after installation
+before the new payload has been injected. Load failures are logged in
+`/tmp/yabai_$USER.err.log`, and Dock-restart recovery remains registered even if
+the initial load fails.
 
 With the scripting addition active, `alt+shift+tab` physically moves the native
 Space to the next display, wrapping from the last display back to the first, and
